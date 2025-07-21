@@ -33,11 +33,15 @@ export class PaymentController {
       if (!request.transactionHash || !request.paymentMethod) {
         return {
           success: false,
-          error: 'transactionHash and paymentMethod are required for payment validation'
+          error:
+            'transactionHash and paymentMethod are required for payment validation',
         };
       }
 
-      console.log('[payment-controller] Validating payment:', request.transactionHash);
+      console.log(
+        '[payment-controller] Validating payment:',
+        request.transactionHash
+      );
 
       const transaction = await this.paymentService.validatePayment(
         request.transactionHash,
@@ -47,19 +51,19 @@ export class PaymentController {
       if (!transaction) {
         return {
           success: false,
-          error: 'Payment transaction not found or invalid'
+          error: 'Payment transaction not found or invalid',
         };
       }
 
       return {
         success: true,
         data: transaction,
-        transactionHash: request.transactionHash
+        transactionHash: request.transactionHash,
       };
     } catch (error) {
       return {
         success: false,
-        error: `Failed to validate payment: ${error.message}`
+        error: `Failed to validate payment: ${error.message}`,
       };
     }
   }
@@ -67,9 +71,14 @@ export class PaymentController {
   /**
    * Get purchase history for a user address
    */
-  async handleGetPurchaseHistory(request: PaymentRequest): Promise<PaymentResult> {
+  async handleGetPurchaseHistory(
+    request: PaymentRequest
+  ): Promise<PaymentResult> {
     try {
-      console.log('[payment-controller] Getting purchase history for:', request.userAddress);
+      console.log(
+        '[payment-controller] Getting purchase history for:',
+        request.userAddress
+      );
 
       // TODO: Implement actual purchase history retrieval from blockchain
       // This would query transaction history for the user's address
@@ -79,13 +88,13 @@ export class PaymentController {
         success: true,
         data: {
           transactions: mockHistory,
-          count: mockHistory.length
-        }
+          count: mockHistory.length,
+        },
       };
     } catch (error) {
       return {
         success: false,
-        error: `Failed to get purchase history: ${error.message}`
+        error: `Failed to get purchase history: ${error.message}`,
       };
     }
   }
@@ -101,12 +110,12 @@ export class PaymentController {
 
       return {
         success: true,
-        data: paymentData
+        data: paymentData,
       };
     } catch (error) {
       return {
         success: false,
-        error: `Failed to get payment methods: ${error.message}`
+        error: `Failed to get payment methods: ${error.message}`,
       };
     }
   }

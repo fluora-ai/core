@@ -65,9 +65,9 @@ export class McpGatewayService {
    * Close all connections
    */
   async closeAllConnections(): Promise<void> {
-    const disconnectPromises = Array.from(this.connections.values()).map(
-      client => client.disconnect()
-    );
+    const disconnectPromises = Array.from(
+      this.connections.values()
+    ).map(client => client.disconnect());
     await Promise.all(disconnectPromises);
     this.connections.clear();
   }

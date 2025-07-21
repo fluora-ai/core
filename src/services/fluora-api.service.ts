@@ -35,8 +35,8 @@ export class FluoraApiService {
       const response = await axios.get(`${this.apiUrl}/mcp-agents`, {
         params: {
           name: filter.name ?? '',
-          category: filter.category ?? ''
-        }
+          category: filter.category ?? '',
+        },
       });
       return response.data;
     } catch (error) {
@@ -70,7 +70,9 @@ export class FluoraApiService {
    */
   async validateServerUrl(mcpServerUrl: string): Promise<boolean> {
     try {
-      const response = await axios.get(`${mcpServerUrl}/health`, { timeout: 5000 });
+      const response = await axios.get(`${mcpServerUrl}/health`, {
+        timeout: 5000,
+      });
       return response.status === 200;
     } catch (error) {
       return false;

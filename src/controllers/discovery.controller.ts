@@ -28,12 +28,17 @@ export class DiscoveryController {
    * Search for Fluora servers by name
    * Replaces the searchFluora tool from fluora-mcp
    */
-  async handleSearchFluora(request: DiscoveryRequest): Promise<DiscoveryResult> {
+  async handleSearchFluora(
+    request: DiscoveryRequest
+  ): Promise<DiscoveryResult> {
     try {
-      console.log('[discovery-controller] Searching Fluora servers with filter:', request);
+      console.log(
+        '[discovery-controller] Searching Fluora servers with filter:',
+        request
+      );
 
       const filter: McpServersFilter = {
-        name: request.name
+        name: request.name,
       };
 
       const servers = await this.apiService.searchServers(filter);
@@ -41,12 +46,12 @@ export class DiscoveryController {
       return {
         success: true,
         data: servers,
-        count: servers.length
+        count: servers.length,
       };
     } catch (error) {
       return {
         success: false,
-        error: `Failed to search Fluora servers: ${error.message}`
+        error: `Failed to search Fluora servers: ${error.message}`,
       };
     }
   }
@@ -57,11 +62,14 @@ export class DiscoveryController {
    */
   async handleListServers(request: DiscoveryRequest): Promise<DiscoveryResult> {
     try {
-      console.log('[discovery-controller] Listing servers with filter:', request);
+      console.log(
+        '[discovery-controller] Listing servers with filter:',
+        request
+      );
 
       const filter: McpServersFilter = {
         name: request.name,
-        category: request.category
+        category: request.category,
       };
 
       const servers = await this.apiService.listServers(filter);
@@ -69,12 +77,12 @@ export class DiscoveryController {
       return {
         success: true,
         data: servers,
-        count: servers.length
+        count: servers.length,
       };
     } catch (error) {
       return {
         success: false,
-        error: `Failed to list servers: ${error.message}`
+        error: `Failed to list servers: ${error.message}`,
       };
     }
   }
@@ -82,34 +90,39 @@ export class DiscoveryController {
   /**
    * Get detailed information about a specific server
    */
-  async handleGetServerInfo(request: DiscoveryRequest): Promise<DiscoveryResult> {
+  async handleGetServerInfo(
+    request: DiscoveryRequest
+  ): Promise<DiscoveryResult> {
     try {
       if (!request.serverId) {
         return {
           success: false,
-          error: 'serverId is required for getServerInfo operation'
+          error: 'serverId is required for getServerInfo operation',
         };
       }
 
-      console.log('[discovery-controller] Getting server info for:', request.serverId);
+      console.log(
+        '[discovery-controller] Getting server info for:',
+        request.serverId
+      );
 
       const server = await this.apiService.getServerInfo(request.serverId);
 
       if (!server) {
         return {
           success: false,
-          error: `Server with ID ${request.serverId} not found`
+          error: `Server with ID ${request.serverId} not found`,
         };
       }
 
       return {
         success: true,
-        data: server
+        data: server,
       };
     } catch (error) {
       return {
         success: false,
-        error: `Failed to get server info: ${error.message}`
+        error: `Failed to get server info: ${error.message}`,
       };
     }
   }

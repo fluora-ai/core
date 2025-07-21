@@ -11,13 +11,17 @@ export class FluoraMcpClientSSE implements FluoraMcpClient {
 
   async connect(mcpServerUrl: string): Promise<void> {
     // Implementation mirrors fluora-mcp client-sse.ts
-    const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
-    const { SSEClientTransport } = await import('@modelcontextprotocol/sdk/client/sse.js');
+    const { Client } = await import(
+      '@modelcontextprotocol/sdk/client/index.js'
+    );
+    const { SSEClientTransport } = await import(
+      '@modelcontextprotocol/sdk/client/sse.js'
+    );
 
     this.client = new Client(
       {
-        name: "fluora-vincent-tool-client",
-        version: "1.0.0",
+        name: 'fluora-vincent-tool-client',
+        version: '1.0.0',
       },
       {
         capabilities: {
@@ -28,7 +32,7 @@ export class FluoraMcpClientSSE implements FluoraMcpClient {
       }
     );
 
-    this.transport = new SSEClientTransport(new URL(mcpServerUrl + "/sse"));
+    this.transport = new SSEClientTransport(new URL(mcpServerUrl + '/sse'));
     await this.client.connect(this.transport);
   }
 
