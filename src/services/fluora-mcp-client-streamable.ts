@@ -20,7 +20,7 @@ export class FluoraMcpClientStreamable implements FluoraMcpClient {
 
     this.client = new Client(
       {
-        name: 'fluora-vincent-tool-streamable-client',
+        name: 'fluora-streamable-client',
         version: '1.0.0',
       },
       {
