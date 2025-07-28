@@ -45,13 +45,11 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.15.1",
-    "axios": "^1.10.0",
+    "axios": "^1.11.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@size-limit/esbuild": "^11.2.0",
-    "@size-limit/esbuild-why": "^11.2.0",
-    "@size-limit/preset-small-lib": "^11.2.0",
+    "@size-limit/file": "^11.2.0",
     "husky": "^9.1.7",
     "np": "^10.2.0",
     "size-limit": "^11.2.0",

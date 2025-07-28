@@ -14,13 +14,13 @@ export class FluoraMcpClientStreamable implements FluoraMcpClient {
     const { Client } = await import(
       '@modelcontextprotocol/sdk/client/index.js'
     );
-    const { StdioClientTransport } = await import(
-      '@modelcontextprotocol/sdk/client/stdio.js'
+    const { StreamableHTTPClientTransport } = await import(
+      '@modelcontextprotocol/sdk/client/streamableHttp.js'
     );
 
     this.client = new Client(
       {
-        name: 'fluora-vincent-tool-streamable-client',
+        name: 'fluora-streamable-client',
         version: '1.0.0',
       },
       {
@@ -32,11 +32,9 @@ export class FluoraMcpClientStreamable implements FluoraMcpClient {
       }
     );
 
-    // Note: Streamable implementation may need different transport setup
-    // This is a placeholder for the actual streamable transport logic
-    this.transport = new StdioClientTransport({
-      command: mcpServerUrl, // This will need proper streamable server connection logic
-    });
+    this.transport = new StreamableHTTPClientTransport(
+      new URL(mcpServerUrl + '/mcp')
+    );
 
     await this.client.connect(this.transport);
   }

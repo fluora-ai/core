@@ -20,7 +20,7 @@ export class FluoraMcpClientSSE implements FluoraMcpClient {
 
     this.client = new Client(
       {
-        name: 'fluora-vincent-tool-client',
+        name: 'fluora-client',
         version: '1.0.0',
       },
       {
