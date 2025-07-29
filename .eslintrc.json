@@ -4,8 +4,8 @@
   "plugins": ["@typescript-eslint"],
   "extends": [
     "eslint:recommended",
-    "@typescript-eslint/recommended",
-    "@typescript-eslint/recommended-requiring-type-checking"
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking"
   ],
   "parserOptions": {
     "ecmaVersion": 2020,
@@ -20,9 +20,6 @@
     "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
     "@typescript-eslint/explicit-function-return-type": "warn",
     "@typescript-eslint/no-explicit-any": "warn",
-    "@typescript-eslint/prefer-const": "error",
-    "@typescript-eslint/no-inferrable-types": "off",
-    "prefer-const": "error",
     "no-var": "error",
     "no-console": ["warn", { "allow": ["warn", "error"] }]
   },
@@ -33,4 +30,3 @@
     "**/*.test.ts"
   ]
 }
-
