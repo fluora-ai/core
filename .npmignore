@@ -1,0 +1,45 @@
+# Source files (already included via "files" in package.json)
+src/
+
+# Configuration files
+tsconfig.json
+vitest.config.ts
+.gitignore
+.npmignore
+
+# Development dependencies
+jest.config.js
+.eslintrc.*
+.prettierrc.*
+
+# Test files
+**/__tests__/**
+**/*.test.*
+**/*.spec.*
+coverage/
+
+# Documentation
+README.md
+CHANGELOG.md
+docs/
+
+# CI/CD
+.github/
+.travis.yml
+.circleci/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+tmp/
+temp/
+
+# OS files
+.DS_Store
+Thumbs.db
