@@ -44,6 +44,32 @@ describe('FluoraApiService', () => {
       expect(result).toEqual(mockServers);
     });
 
+    it('should search servers with empty filter', async () => {
+      const filter = {};
+      const mockServers = [
+        { id: '1', name: 'all-server-1' },
+        { id: '2', name: 'all-server-2' },
+        { id: '3', name: 'all-server-3' },
+      ];
+
+      // Mock the axios.get response
+      vi.mocked(axios.get).mockResolvedValueOnce({
+        data: mockServers
+      });
+
+      const result = await service.searchServers(filter);
+
+      // Verify the correct API endpoint was called with empty parameters
+      expect(axios.get).toHaveBeenCalledWith(
+        'https://api.fluora.ai/mcp-agents',
+        {
+          params: { name: '', category: '' }
+        }
+      );
+
+      expect(result).toEqual(mockServers);
+    });
+
     it('should handle API errors', async () => {
       const filter = { name: 'test' };
 
@@ -82,6 +108,31 @@ describe('FluoraApiService', () => {
 
       expect(result).toEqual(mockServers);
     });
+
+    it('should list all servers with empty filter', async () => {
+        const filter = undefined;
+        const mockServers = [
+            { id: '1', name: 'all-server-1', category: 'General' },
+            { id: '2', name: 'all-server-2', category: 'General' },
+        ];
+
+        // Mock the axios.get response
+        vi.mocked(axios.get).mockResolvedValueOnce({
+            data: mockServers
+        });
+
+        const result = await service.listServers(filter);
+
+        // Verify the correct API endpoint was called with empty parameters
+        expect(axios.get).toHaveBeenCalledWith(
+            'https://api.fluora.ai/mcp-agents',
+            {
+            params: { name: '', category: '' }
+            }
+        );
+
+        expect(result).toEqual(mockServers);
+    })
 
     it('should handle API errors', async () => {
       const filter = { category: 'AI' };
