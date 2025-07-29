@@ -38,7 +38,7 @@ export class FluoraApiService {
           category: filter.category ?? '',
         },
       });
-      return response.data;
+      return response.data as McpServer[];
     } catch (error) {
       console.error('Error searching servers:', error);
       return [];
@@ -58,7 +58,7 @@ export class FluoraApiService {
   async getServerInfo(serverId: string): Promise<McpServer | null> {
     try {
       const response = await axios.get(`${this.apiUrl}/mcp-agents/${serverId}`);
-      return response.data;
+      return response.data as McpServer;
     } catch (error) {
       console.error('Error getting server info:', error);
       return null;
@@ -74,7 +74,7 @@ export class FluoraApiService {
         timeout: 5000,
       });
       return response.status === 200;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
