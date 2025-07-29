@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { BlockchainPaymentService } from '../blockchain-payment.service';
-import { PaymentMethods } from '../../schemas';
+import { BlockchainPaymentService } from '@/services/blockchain-payment.service';
+import { PaymentMethods } from '@/schemas';
 
 describe('BlockchainPaymentService', () => {
   let service: BlockchainPaymentService;

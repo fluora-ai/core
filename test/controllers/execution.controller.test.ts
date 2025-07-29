@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ExecutionController } from '../execution.controller';
-import { McpGatewayService } from '../../services/mcp-gateway.service';
-import { BlockchainPaymentService } from '../../services/blockchain-payment.service';
-import { FluoraOperation, ExecutionRequest, PaymentMethods } from '../../schemas';
+import { ExecutionController, ExecutionRequest } from '@/controllers/execution.controller';
+import { McpGatewayService } from '@/services/mcp-gateway.service';
+import { BlockchainPaymentService } from '@/services/blockchain-payment.service';
+import { FluoraOperation, PaymentMethods } from '@/schemas';
 
 // Mock dependencies
-vi.mock('../../services/mcp-gateway.service');
-vi.mock('../../services/blockchain-payment.service');
+vi.mock('@/services/mcp-gateway.service');
+vi.mock('@/services/blockchain-payment.service');
 
 describe('ExecutionController', () => {
   let controller: ExecutionController;

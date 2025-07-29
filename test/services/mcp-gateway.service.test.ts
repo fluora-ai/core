@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { McpGatewayService, FluoraMcpClient } from '../mcp-gateway.service';
-import { FluoraMcpClientSSE } from '../fluora-mcp-client-sse';
-import { FluoraMcpClientStreamable } from '../fluora-mcp-client-streamable';
+import { McpGatewayService, FluoraMcpClient } from '@/services/mcp-gateway.service';
+import { FluoraMcpClientSSE } from '@/services/fluora-mcp-client-sse';
+import { FluoraMcpClientStreamable } from '@/services/fluora-mcp-client-streamable';
 
 // Mock the client implementations
-vi.mock('../fluora-mcp-client-sse');
-vi.mock('../fluora-mcp-client-streamable');
+vi.mock('@/services/fluora-mcp-client-sse');
+vi.mock('@/services/fluora-mcp-client-streamable');
 
 describe('McpGatewayService', () => {
   let service: McpGatewayService;
