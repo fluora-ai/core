@@ -84,6 +84,11 @@ describe('FluoraMcpClientSSE', () => {
       });
       expect(result).toEqual(mockResult);
     });
+
+    it('should throw error if client is not connected', async () => {
+      // Don't set up the client (simulate not connected)
+      await expect(client.callTool('test-tool')).rejects.toThrow('Client not connected');
+    });
   });
 
   describe('listTools', () => {
@@ -98,6 +103,11 @@ describe('FluoraMcpClientSSE', () => {
 
       expect(mockClient.listTools).toHaveBeenCalled();
       expect(result).toEqual(mockTools);
+    });
+
+    it('should throw error if client is not connected', async () => {
+      // Don't set up the client (simulate not connected)
+      await expect(client.listTools()).rejects.toThrow('Client not connected');
     });
   });
 });
