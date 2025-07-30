@@ -1,4 +1,4 @@
-import { FluoraApiService, McpServer, McpServersFilter } from '../services';
+import { FluoraApiService, McpServer, McpServersFilter } from '@/services';
 
 export interface DiscoveryRequest {
   name?: string;
@@ -32,7 +32,7 @@ export class DiscoveryController {
     request: DiscoveryRequest
   ): Promise<DiscoveryResult> {
     try {
-      console.log(
+      console.warn(
         '[discovery-controller] Searching Fluora servers with filter:',
         request
       );
@@ -51,7 +51,7 @@ export class DiscoveryController {
     } catch (error) {
       return {
         success: false,
-        error: `Failed to search Fluora servers: ${error.message}`,
+        error: `Failed to search Fluora servers: ${(error as Error).message}`,
       };
     }
   }
@@ -62,7 +62,7 @@ export class DiscoveryController {
    */
   async handleListServers(request: DiscoveryRequest): Promise<DiscoveryResult> {
     try {
-      console.log(
+      console.warn(
         '[discovery-controller] Listing servers with filter:',
         request
       );
@@ -82,7 +82,7 @@ export class DiscoveryController {
     } catch (error) {
       return {
         success: false,
-        error: `Failed to list servers: ${error.message}`,
+        error: `Failed to list servers: ${(error as Error).message}`,
       };
     }
   }
@@ -101,7 +101,7 @@ export class DiscoveryController {
         };
       }
 
-      console.log(
+      console.warn(
         '[discovery-controller] Getting server info for:',
         request.serverId
       );
@@ -122,7 +122,7 @@ export class DiscoveryController {
     } catch (error) {
       return {
         success: false,
-        error: `Failed to get server info: ${error.message}`,
+        error: `Failed to get server info: ${(error as Error).message}`,
       };
     }
   }

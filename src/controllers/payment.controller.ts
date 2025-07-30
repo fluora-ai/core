@@ -1,5 +1,5 @@
-import { PaymentMethods } from '../schemas';
-import { BlockchainPaymentService, PaymentTransaction } from '../services';
+import { PaymentMethods } from '@/schemas';
+import { BlockchainPaymentService, PaymentTransaction } from '@/services';
 
 export interface PaymentRequest {
   transactionHash?: string;
@@ -9,7 +9,7 @@ export interface PaymentRequest {
 
 export interface PaymentResult {
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: string;
   transactionHash?: string;
 }
@@ -38,7 +38,7 @@ export class PaymentController {
         };
       }
 
-      console.log(
+      console.warn(
         '[payment-controller] Validating payment:',
         request.transactionHash
       );
@@ -75,21 +75,18 @@ export class PaymentController {
     request: PaymentRequest
   ): Promise<PaymentResult> {
     try {
-      console.log(
+      console.warn(
         '[payment-controller] Getting purchase history for:',
         request.userAddress
       );
 
       // TODO: Implement actual purchase history retrieval from blockchain
       // This would query transaction history for the user's address
-      const mockHistory: PaymentTransaction[] = [];
+      const mockHistory: PaymentTransaction[] = await Promise.resolve([]);
 
       return {
         success: true,
-        data: {
-          transactions: mockHistory,
-          count: mockHistory.length,
-        },
+        data: mockHistory,
       };
     } catch (error) {
       return {
@@ -104,7 +101,7 @@ export class PaymentController {
    */
   async getPaymentMethods(): Promise<PaymentResult> {
     try {
-      console.log('[payment-controller] Getting available payment methods');
+      console.warn('[payment-controller] Getting available payment methods');
 
       const paymentData = await this.paymentService.getPaymentMethods();
 

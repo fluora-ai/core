@@ -1,7 +1,7 @@
 {
   "name": "@fluora/core",
   "author": "Fluora Team",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "main": "dist/index.js",
   "module": "dist/core.esm.js",
@@ -14,17 +14,23 @@
     "node": ">=20"
   },
   "scripts": {
-    "start": "tsdx watch",
+    "dev": "tsdx watch",
     "build": "tsdx build",
-    "test": "tsdx test",
-    "lint": "tsdx lint",
-    "prepare": "tsdx build",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "prepare": "npm run build",
     "size": "size-limit",
-    "analyze": "size-limit --why"
+    "analyze": "size-limit --why",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "tsdx lint"
+      "pre-commit": "npm run lint && npm run type-check && npm run test"
     }
   },
   "prettier": {
@@ -50,11 +56,33 @@
   },
   "devDependencies": {
     "@size-limit/file": "^11.2.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "eslint": "^8.57.1",
     "husky": "^9.1.7",
     "np": "^10.2.0",
     "size-limit": "^11.2.0",
     "tsdx": "^0.14.1",
     "tslib": "^2.8.1",
-    "typescript": "^5.8.3"
-  }
+    "typescript": "^5.8.3",
+    "vitest": "^1.0.0"
+  },
+  "keywords": [
+    "fluora",
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "blockchain",
+    "sdk"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fluora-ai/core.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fluora-ai/core/issues"
+  },
+  "homepage": "https://fluora.ai/"
 }

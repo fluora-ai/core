@@ -1,12 +1,12 @@
-import { FluoraOperation, PaymentMethods } from '../schemas';
-import { McpGatewayService, BlockchainPaymentService } from '../services';
+import { FluoraOperation, PaymentMethods } from '@/schemas';
+import { McpGatewayService, BlockchainPaymentService } from '@/services';
 
 export interface ExecutionRequest {
   operation: FluoraOperation;
   serverId: string;
   mcpServerUrl: string;
   toolName?: string;
-  args?: Record<string, any>;
+  args?: Record<string, unknown>;
   itemPrice?: string;
   serverWalletAddress?: string;
   paymentMethod?: PaymentMethods;
@@ -15,7 +15,7 @@ export interface ExecutionRequest {
 // Create a type for the execution result with a union for the different tools results
 export interface ExecutionResult {
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: string;
   transactionHash?: string;
   cost?: string;
@@ -41,7 +41,7 @@ export class ExecutionController {
     request: ExecutionRequest
   ): Promise<ExecutionResult> {
     try {
-      console.log(
+      console.warn(
         '[execution-controller] Getting price listing for:',
         request.serverId
       );
@@ -59,7 +59,7 @@ export class ExecutionController {
     } catch (error) {
       return {
         success: false,
-        error: `Failed to get price listing: ${error.message}`,
+        error: `Failed to get price listing: ${(error as Error).message}`,
       };
     }
   }
@@ -71,7 +71,7 @@ export class ExecutionController {
     request: ExecutionRequest
   ): Promise<ExecutionResult> {
     try {
-      console.log(
+      console.warn(
         '[execution-controller] Getting payment methods for:',
         request.serverId
       );
@@ -89,7 +89,7 @@ export class ExecutionController {
     } catch (error) {
       return {
         success: false,
-        error: `Failed to get payment methods: ${error.message}`,
+        error: `Failed to get payment methods: ${(error as Error).message}`,
       };
     }
   }
@@ -102,7 +102,7 @@ export class ExecutionController {
     request: ExecutionRequest
   ): Promise<ExecutionResult> {
     try {
-      console.log(
+      console.warn(
         '[execution-controller] Processing purchase for:',
         request.serverId
       );
@@ -152,7 +152,7 @@ export class ExecutionController {
     } catch (error) {
       return {
         success: false,
-        error: `Failed to process purchase: ${error.message}`,
+        error: `Failed to process purchase: ${(error as Error).message}`,
       };
     }
   }
@@ -164,7 +164,7 @@ export class ExecutionController {
     request: ExecutionRequest
   ): Promise<ExecutionResult> {
     try {
-      console.log(
+      console.warn(
         '[execution-controller] Calling tool:',
         request.toolName,
         'on server:',
@@ -192,7 +192,7 @@ export class ExecutionController {
     } catch (error) {
       return {
         success: false,
-        error: `Failed to call server tool: ${error.message}`,
+        error: `Failed to call server tool: ${(error as Error).message}`,
       };
     }
   }
@@ -202,7 +202,7 @@ export class ExecutionController {
    */
   async handleListTools(request: ExecutionRequest): Promise<ExecutionResult> {
     try {
-      console.log(
+      console.warn(
         '[execution-controller] Listing tools for server:',
         request.serverId
       );
@@ -218,7 +218,7 @@ export class ExecutionController {
     } catch (error) {
       return {
         success: false,
-        error: `Failed to list server tools: ${error.message}`,
+        error: `Failed to list server tools: ${(error as Error).message}`,
       };
     }
   }
@@ -233,7 +233,7 @@ export class ExecutionController {
     } catch (error) {
       console.warn(
         '[execution-controller] Server validation failed:',
-        error.message
+          (error as Error).message
       );
       return false;
     }
