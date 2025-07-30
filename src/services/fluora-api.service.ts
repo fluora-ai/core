@@ -24,7 +24,7 @@ export class FluoraApiService {
   private readonly apiUrl: string;
 
   constructor() {
-    this.apiUrl = 'https://api.fluora.ai';
+    this.apiUrl = 'https://api.fluora.ai/api';
   }
 
   /**
