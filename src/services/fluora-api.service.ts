@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Constants } from '@/utils/constants';
 
 export interface McpServer {
   id: string;
@@ -24,7 +25,7 @@ export class FluoraApiService {
   private readonly apiUrl: string;
 
   constructor() {
-    this.apiUrl = 'https://api.fluora.ai/api';
+    this.apiUrl = Constants.API_BASE_URL;
   }
 
   /**
