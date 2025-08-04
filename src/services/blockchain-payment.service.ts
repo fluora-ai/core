@@ -43,17 +43,12 @@ export class BlockchainPaymentService {
     paymentMethod: PaymentMethods,
     pkpPrivateKey?: string
   ): Promise<SignedTransaction> {
-    // This will integrate with lit-protocol for transaction signing
-    // For now, this is a placeholder that mirrors the existing pattern
-
     console.warn('[blockchain-payment.service] Signing payment transaction:', {
       amount,
       recipientAddress,
       paymentMethod,
     });
 
-    // TODO: Implement actual lit-protocol transaction signing
-    // This should replace the PaymentsTools.signTransaction call
     const signedTransaction = await this.createSignedTransaction(
       amount,
       recipientAddress,
@@ -77,9 +72,6 @@ export class BlockchainPaymentService {
     paymentMethod: PaymentMethods
   ): Promise<PaymentTransaction | null> {
     try {
-      // TODO: Implement blockchain validation using lit-protocol
-      // Check if transaction exists and is valid for the specified payment method
-
       console.warn('[blockchain-payment.service] Validating payment:', {
         transactionHash,
         paymentMethod,
@@ -109,7 +101,6 @@ export class BlockchainPaymentService {
     paymentMethods: PaymentMethods[];
     walletAddresses: Record<PaymentMethods, string>;
   }> {
-    // TODO: Get actual wallet addresses from lit-protocol PKP
     return Promise.resolve({
       paymentMethods: [
         PaymentMethods.USDC_BASE_MAINNET,
@@ -125,7 +116,7 @@ export class BlockchainPaymentService {
   }
 
   /**
-   * Create signed transaction using lit-protocol
+   * Create signed transaction using x402
    */
   private async createSignedTransaction(
     amount: number,
@@ -133,9 +124,6 @@ export class BlockchainPaymentService {
     paymentMethod: PaymentMethods,
     _pkpPrivateKey?: string
   ): Promise<string> {
-    // TODO: Implement actual lit-protocol signing
-    // This should use the PKP to sign USDC transfer transactions
-
     const currency = this.getCurrencyFromPaymentMethod(paymentMethod);
     const chain = this.getChainFromPaymentMethod(paymentMethod);
 
@@ -155,7 +143,6 @@ export class BlockchainPaymentService {
       paymentRequirements
     );
 
-    // Placeholder - should return actual signed transaction hex
     return await Promise.resolve(paymentHeader);
   }
 
