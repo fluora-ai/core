@@ -148,10 +148,9 @@ export class BlockchainPaymentService {
       paymentMethod,
       _recipientAddress
     );
-
-    const wallet = await this.createWallet(paymentMethod, _pkpPrivateKey);
+    const account = privateKeyToAccount(`0x${_pkpPrivateKey}` as Hex);
     const paymentHeader = await createPaymentHeader(
-      wallet,
+      account,
       x402Version,
       paymentRequirements
     );
@@ -164,12 +163,12 @@ export class BlockchainPaymentService {
     return paymentMethod.split('_')[0]; // 'USDC'
   }
 
-  private getChainFromPaymentMethod(paymentMethod: PaymentMethods): Chain {
+  private getChainFromPaymentMethod(paymentMethod: PaymentMethods) {
     switch (paymentMethod) {
-      case PaymentMethods.USDC_BASE_MAINNET:
-        return base as Chain;
       case PaymentMethods.USDC_BASE_SEPOLIA:
-        return baseSepolia as Chain;
+        return baseSepolia;
+      case PaymentMethods.USDC_BASE_MAINNET:
+        return base;
       default:
         throw new Error(`Unsupported payment method: ${paymentMethod}`);
     }
@@ -211,19 +210,5 @@ export class BlockchainPaymentService {
     };
 
     return paymentRequirements;
-  }
-
-  private async createWallet(
-    paymentMethod: PaymentMethods,
-    pkpPrivateKey?: string
-  ) {
-    const chain = this.getChainFromPaymentMethod(paymentMethod);
-
-    const account = privateKeyToAccount(`0x${pkpPrivateKey}` as Hex);
-    return createWalletClient({
-      account,
-      chain: chain,
-      transport: http(),
-    }).extend(publicActions);
   }
 }
