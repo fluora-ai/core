@@ -61,9 +61,13 @@ export class PaymentController {
         transactionHash: request.transactionHash,
       };
     } catch (error) {
+      let errorMessage = 'Unknown error';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       return {
         success: false,
-        error: `Failed to validate payment: ${error.message}`,
+        error: `Failed to validate payment: ${errorMessage}`,
       };
     }
   }
@@ -89,9 +93,13 @@ export class PaymentController {
         data: mockHistory,
       };
     } catch (error) {
+      let errorMessage = 'Unknown error';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       return {
         success: false,
-        error: `Failed to get purchase history: ${error.message}`,
+        error: `Failed to get purchase history: ${errorMessage}`,
       };
     }
   }
@@ -110,9 +118,13 @@ export class PaymentController {
         data: paymentData,
       };
     } catch (error) {
+      let errorMessage = 'Unknown error';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       return {
         success: false,
-        error: `Failed to get payment methods: ${error.message}`,
+        error: `Failed to get payment methods: ${errorMessage}`,
       };
     }
   }

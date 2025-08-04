@@ -50,10 +50,11 @@
     }
   ],
   "dependencies": {
-    "@coinbase/x402": "^0.4.2",
+    "@coinbase/x402": "^0.4.3",
     "@modelcontextprotocol/sdk": "^1.15.1",
     "axios": "^1.11.0",
-    "viem": "^2.33.1",
+    "viem": "^2.33.2",
+    "x402": "^0.4.3",
     "zod": "^3.25.76"
   },
   "devDependencies": {

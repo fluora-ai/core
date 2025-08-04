@@ -1,4 +1,15 @@
 import { PaymentMethods } from '@/schemas';
+import { exact } from 'x402/dist/cjs/schemes';
+import { createPaymentHeader, x402Version } from 'x402/dist/cjs/index';
+import { processPriceToAtomicAmount } from 'x402/dist/cjs/shared';
+import {
+  Network,
+  PaymentPayload,
+  PaymentRequirements,
+} from 'x402/dist/cjs/types';
+import { privateKeyToAccount } from 'viem/accounts';
+import { Hex, createWalletClient, http, publicActions } from 'viem';
+import { baseSepolia, base, Chain } from 'viem/chains';
 
 export interface PaymentTransaction {
   transactionHash: string;
@@ -79,7 +90,7 @@ export class BlockchainPaymentService {
         transactionHash,
         amount: '0',
         currency: this.getCurrencyFromPaymentMethod(paymentMethod),
-        chain: this.getChainFromPaymentMethod(paymentMethod),
+        chain: this.getChainFromPaymentMethod(paymentMethod).name,
         fromAddress: '0x0000000000000000000000000000000000000000',
         toAddress: '0x0000000000000000000000000000000000000000',
         timestamp: Date.now(),
@@ -132,16 +143,87 @@ export class BlockchainPaymentService {
       `Creating signed ${currency} transaction on ${chain} for ${amount}`
     );
 
+    const paymentRequirements = this.createExactPaymentRequirements(
+      amount,
+      paymentMethod,
+      _recipientAddress
+    );
+
+    const wallet = await this.createWallet(paymentMethod, _pkpPrivateKey);
+    const paymentHeader = await createPaymentHeader(
+      wallet,
+      x402Version,
+      paymentRequirements
+    );
+
     // Placeholder - should return actual signed transaction hex
-    return await Promise.resolve('0x0000000000000000000000000000000000000000000000000000000000000000');
+    return await Promise.resolve(paymentHeader);
   }
 
   private getCurrencyFromPaymentMethod(paymentMethod: PaymentMethods): string {
     return paymentMethod.split('_')[0]; // 'USDC'
   }
 
-  private getChainFromPaymentMethod(paymentMethod: PaymentMethods): string {
-    const parts = paymentMethod.split('_');
-    return parts.slice(1).join('_'); // 'BASE_MAINNET' or 'BASE_SEPOLIA'
+  private getChainFromPaymentMethod(paymentMethod: PaymentMethods): Chain {
+    switch (paymentMethod) {
+      case PaymentMethods.USDC_BASE_MAINNET:
+        return base as Chain;
+      case PaymentMethods.USDC_BASE_SEPOLIA:
+        return baseSepolia as Chain;
+      default:
+        throw new Error(`Unsupported payment method: ${paymentMethod}`);
+    }
+  }
+
+  private getNetworkFromPaymentMethod(paymentMethod: PaymentMethods): string {
+    switch (paymentMethod) {
+      case PaymentMethods.USDC_BASE_MAINNET:
+        return 'base';
+      case PaymentMethods.USDC_BASE_SEPOLIA:
+        return 'base-sepolia';
+    }
+  }
+
+  private createExactPaymentRequirements(
+    amount: number,
+    paymentMethod: PaymentMethods,
+    recipientAddress: string
+  ): PaymentRequirements {
+    const network = this.getNetworkFromPaymentMethod(paymentMethod) as Network;
+    const atomicAmountForAsset = processPriceToAtomicAmount(amount, network);
+    if ('error' in atomicAmountForAsset) {
+      throw new Error(atomicAmountForAsset.error);
+    }
+    const { maxAmountRequired, asset } = atomicAmountForAsset;
+
+    // create requirements
+    const paymentRequirements: PaymentRequirements = {
+      scheme: 'exact',
+      network,
+      maxAmountRequired,
+      resource: 'https://fluora.ai',
+      description: 'Payment for Fluora',
+      mimeType: 'application/json',
+      payTo: recipientAddress,
+      maxTimeoutSeconds: 300,
+      asset: asset.address,
+      outputSchema: undefined,
+    };
+
+    return paymentRequirements;
+  }
+
+  private async createWallet(
+    paymentMethod: PaymentMethods,
+    pkpPrivateKey?: string
+  ) {
+    const chain = this.getChainFromPaymentMethod(paymentMethod);
+
+    const account = privateKeyToAccount(`0x${pkpPrivateKey}` as Hex);
+    return createWalletClient({
+      account,
+      chain: chain,
+      transport: http(),
+    }).extend(publicActions);
   }
 }
