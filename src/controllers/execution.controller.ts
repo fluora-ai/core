@@ -13,6 +13,7 @@ export interface ExecutionRequest {
   itemPrice?: string;
   serverWalletAddress?: string;
   paymentMethod?: PaymentMethods;
+  pkpPrivateKey?: string;
 }
 
 // Create a type for the execution result with a union for the different tools results
@@ -127,7 +128,8 @@ export class ExecutionController {
       const signedPayment = await this.paymentService.signPaymentTransaction(
         parseFloat(request.itemPrice),
         request.serverWalletAddress,
-        request.paymentMethod
+        request.paymentMethod,
+        request.pkpPrivateKey
       );
 
       // Prepare arguments for the MonetizedMCPServer make-purchase tool
