@@ -8,6 +8,7 @@ export interface PaymentRequest {
   transactionHash?: string;
   paymentMethod?: PaymentMethods;
   userAddress?: string;
+  amount?: number; // Amount in smallest unit (e.g., wei for ETH, cents for USD)
 }
 
 export interface PaymentResult {
@@ -29,15 +30,20 @@ export class PaymentController {
   }
 
   /**
-   * Validate a payment transaction on the blockchain
+   * Validate and settle a payment transaction on the blockchain
    */
   async handleValidatePayment(request: PaymentRequest): Promise<PaymentResult> {
     try {
-      if (!request.transactionHash || !request.paymentMethod) {
+      if (
+        !request.transactionHash ||
+        !request.paymentMethod ||
+        !request.amount ||
+        !request.userAddress
+      ) {
         return {
           success: false,
           error:
-            'transactionHash and paymentMethod are required for payment validation',
+            'transactionHash, paymentMethod, amount, and userAddress are required for payment validation',
         };
       }
 
@@ -46,9 +52,13 @@ export class PaymentController {
         request.transactionHash
       );
 
-      const transaction = await this.paymentService.validatePayment(
-        request.transactionHash,
-        request.paymentMethod
+      const transaction = await this.paymentService.validateAndSettlePayment(
+        {
+          amount: request.amount,
+          recipientAddress: request.userAddress,
+        },
+        request.paymentMethod,
+        request.transactionHash
       );
 
       if (!transaction) {

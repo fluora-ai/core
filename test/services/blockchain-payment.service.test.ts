@@ -107,46 +107,69 @@ describe('BlockchainPaymentService', () => {
     });
   });
 
-  describe('validatePayment', () => {
-    it('should return transaction details when validation succeeds', async () => {
+  describe('validateAndSettlePayment', () => {
+    it('should return transaction details when validation and settlement succeed', async () => {
       const transactionHash = '0xtransactionHash';
       const paymentMethod = PaymentMethods.USDC_BASE_MAINNET;
+      const amount = 100;
+      const recipientAddress = '0xrecipient';
 
-      // Spy on the private methods
-      vi.spyOn(service as any, 'getCurrencyFromPaymentMethod').mockReturnValue(
-        'USDC'
-      );
-      vi.spyOn(service as any, 'getNetworkFromPaymentMethod').mockReturnValue(
-        'base'
-      );
+      // Mock the private methods to simulate successful verification and settlement
+      vi.spyOn(service as any, 'verifyPayment').mockResolvedValue({
+        success: true,
+        payload: {
+          payload: {
+            authorization: {
+              from: '0xfromAddress'
+            }
+          }
+        }
+      });
+      
+      vi.spyOn(service as any, 'settlePayment').mockResolvedValue({
+        success: true
+      });
 
-      const result = await service.validatePayment(
-        transactionHash,
-        paymentMethod
+      const result = await service.validateAndSettlePayment(
+        {
+          amount,
+          recipientAddress,
+        },
+        paymentMethod,
+        transactionHash
       );
 
       expect(result).toMatchObject({
         transactionHash,
         currency: 'USDC',
         chain: 'base',
+        amount: amount.toString(),
+        toAddress: recipientAddress,
       });
     });
 
-    it('should return null when validation fails', async () => {
-      // Mock implementation to throw an error
-      vi.spyOn(
-        service as any,
-        'getCurrencyFromPaymentMethod'
-      ).mockImplementation(() => {
-        throw new Error('Validation error');
+    it('should return transaction with amount 0 when validation fails', async () => {
+      // Mock implementation to simulate failed verification
+      vi.spyOn(service as any, 'verifyPayment').mockResolvedValue({
+        success: false,
+        message: 'Verification failed'
       });
 
-      const result = await service.validatePayment(
-        '0xtransactionHash',
-        PaymentMethods.USDC_BASE_MAINNET
+      const result = await service.validateAndSettlePayment(
+        {
+          amount: 100,
+          recipientAddress: '0xrecipient',
+        },
+        PaymentMethods.USDC_BASE_MAINNET,
+        '0xtransactionHash'
       );
 
-      expect(result).toBeNull();
+      expect(result).toMatchObject({
+        transactionHash: '0xtransactionHash',
+        amount: '0',
+        currency: 'USDC',
+        chain: 'base',
+      });
       expect(console.error).toHaveBeenCalled();
     });
   });

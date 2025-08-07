@@ -1,7 +1,14 @@
 import { PaymentMethods } from '../schemas.js';
 import { exact } from 'x402/schemes';
-import { Network, PaymentPayload, PaymentRequirements } from 'x402/types';
+import {
+  Network,
+  PaymentPayload,
+  PaymentRequirements,
+  settleResponseHeader,
+} from 'x402/types';
 import { processPriceToAtomicAmount } from 'x402/shared';
+import { facilitator } from '@coinbase/x402';
+import { useFacilitator } from 'x402/verify';
 import { http, Hex, createWalletClient, publicActions } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia, base, Chain } from 'viem/chains';
@@ -65,34 +72,91 @@ export class BlockchainPaymentService {
   }
 
   /**
-   * Validate a payment transaction on-chain
+   * Validate and settle a payment transaction on-chain
    */
-  async validatePayment(
-    transactionHash: string,
-    paymentMethod: PaymentMethods
-  ): Promise<PaymentTransaction | null> {
+  async validateAndSettlePayment(
+    {
+      amount,
+      recipientAddress,
+    }: {
+      amount: number;
+      recipientAddress: string;
+    },
+    paymentMethod: PaymentMethods,
+    transactionHash: string
+  ): Promise<PaymentTransaction> {
     try {
-      // TODO: Implement blockchain validation using lit-protocol
-      // Check if transaction exists and is valid for the specified payment method
-
       console.warn('[blockchain-payment.service] Validating payment:', {
         transactionHash,
         paymentMethod,
       });
 
-      // Placeholder return - should query actual blockchain
-      return await Promise.resolve({
+      // Verify
+      const paymentRequirements = this.createExactPaymentRequirements(
+        amount,
+        paymentMethod,
+        recipientAddress
+      );
+
+      const verifyResponse = await this.verifyPayment(
+        transactionHash,
+        paymentRequirements
+      );
+
+      if (!verifyResponse.success) {
+        console.error('Payment verification failed:', verifyResponse.message);
+        return {
+          transactionHash,
+          amount: '0',
+          currency: this.getCurrencyFromPaymentMethod(paymentMethod),
+          chain: this.getNetworkFromPaymentMethod(paymentMethod),
+          fromAddress: '0x0000000000000000000000000000000000000000',
+          toAddress: recipientAddress,
+          timestamp: Date.now(),
+        };
+      }
+
+      // Settle
+      if (!verifyResponse.payload) {
+        throw new Error('No valid payload returned from payment verification');
+      }
+      const settleResponse = await this.settlePayment(
+        verifyResponse.payload,
+        paymentRequirements
+      );
+
+      if (settleResponse.success) {
+        console.error('Payment settled successfully:', settleResponse);
+        return {
+          transactionHash,
+          amount: amount.toString(),
+          currency: this.getCurrencyFromPaymentMethod(paymentMethod),
+          chain: this.getNetworkFromPaymentMethod(paymentMethod),
+          fromAddress: verifyResponse.payload.payload.authorization.from,
+          toAddress: recipientAddress,
+          timestamp: Date.now(),
+        };
+      }
+      return {
         transactionHash,
         amount: '0',
         currency: this.getCurrencyFromPaymentMethod(paymentMethod),
         chain: this.getNetworkFromPaymentMethod(paymentMethod),
         fromAddress: '0x0000000000000000000000000000000000000000',
-        toAddress: '0x0000000000000000000000000000000000000000',
+        toAddress: recipientAddress,
         timestamp: Date.now(),
-      });
+      };
     } catch (error) {
-      console.error('Error validating payment:', error);
-      return null;
+      console.error('Error validating and settling payment:', error);
+      return {
+        transactionHash,
+        amount: '0',
+        currency: this.getCurrencyFromPaymentMethod(paymentMethod),
+        chain: this.getNetworkFromPaymentMethod(paymentMethod),
+        fromAddress: '0x0000000000000000000000000000000000000000',
+        toAddress: recipientAddress,
+        timestamp: Date.now(),
+      };
     }
   }
 
@@ -221,5 +285,65 @@ export class BlockchainPaymentService {
     };
 
     return paymentRequirements;
+  }
+
+  private async verifyPayment(
+    signedTransaction: string,
+    paymentRequirements: PaymentRequirements
+  ) {
+    try {
+      const decodedTransaction = exact.evm.decodePayment(signedTransaction);
+      const { verify } = useFacilitator(facilitator);
+      const response = await verify(decodedTransaction, paymentRequirements);
+
+      if (!response.isValid) {
+        console.error('Invalid payment:', response.invalidReason);
+        return {
+          success: false,
+          message: response.invalidReason || 'Invalid payment',
+          responseHeader: '',
+        };
+      }
+      console.error('Payment verified successfully:', response);
+      return {
+        success: true,
+        message: 'Payment verified successfully',
+        responseHeader: JSON.stringify(response, null, 2),
+        payload: decodedTransaction,
+      };
+    } catch (error) {
+      console.error('Error verifying payment:', error);
+      return {
+        success: false,
+        message: 'Error during payment verification',
+        responseHeader: '',
+        error: (error as Error).message,
+      };
+    }
+  }
+
+  private async settlePayment(
+    decodedTransaction: PaymentPayload,
+    paymentRequirements: PaymentRequirements
+  ) {
+    try {
+      const { settle } = useFacilitator(facilitator);
+      const settlement = await settle(decodedTransaction, paymentRequirements);
+      const responseHeader = settleResponseHeader(settlement);
+      console.error('Payment settled successfully:', settlement);
+      return {
+        success: true,
+        message: 'Payment settled successfully',
+        responseHeader,
+      };
+    } catch (error) {
+      console.error('Error settling payment:', error);
+      return {
+        success: false,
+        message: 'Error during payment settlement',
+        responseHeader: '',
+        error: (error as Error).message,
+      };
+    }
   }
 }
