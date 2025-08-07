@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DiscoveryController, DiscoveryRequest } from '@/controllers/discovery.controller';
-import { FluoraApiService } from '@/services';
+import {
+  DiscoveryController,
+  DiscoveryRequest,
+} from '../../src/controllers/discovery.controller';
+import { FluoraApiService } from '../../src/services';
 
 // Mock the FluoraApiService
-vi.mock('@/services/fluora-api.service');
+vi.mock('../../src/services/fluora-api.service');
 
 describe('DiscoveryController', () => {
   let controller: DiscoveryController;

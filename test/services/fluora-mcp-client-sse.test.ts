@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { FluoraMcpClientSSE } from '@/services/fluora-mcp-client-sse';
+import { FluoraMcpClientSSE } from '../../src/services/fluora-mcp-client-sse';
 
 // Mock the MCP SDK modules
 vi.mock('@modelcontextprotocol/sdk/client/index.js', () => ({

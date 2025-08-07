@@ -1,12 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ExecutionController, ExecutionRequest } from '@/controllers/execution.controller';
-import { McpGatewayService } from '@/services/mcp-gateway.service';
-import { BlockchainPaymentService } from '@/services/blockchain-payment.service';
-import { FluoraOperation, PaymentMethods } from '@/schemas';
+import {
+  ExecutionController,
+  ExecutionRequest,
+} from '../../src/controllers/execution.controller';
+import { McpGatewayService } from '../../src/services/mcp-gateway.service';
+import { BlockchainPaymentService } from '../../src/services/blockchain-payment.service';
+import { FluoraOperation, PaymentMethods } from '../../src/schemas';
 
 // Mock dependencies
-vi.mock('@/services/mcp-gateway.service');
-vi.mock('@/services/blockchain-payment.service');
+vi.mock('../../src/services/mcp-gateway.service');
+vi.mock('../../src/services/blockchain-payment.service');
 
 describe('ExecutionController', () => {
   let controller: ExecutionController;
@@ -17,23 +20,25 @@ describe('ExecutionController', () => {
     vi.resetAllMocks();
 
     // Create mock implementations
-    mockMcpGateway = {
+    mockMcpGateway = ({
       getConnection: vi.fn(),
       callServerTool: vi.fn(),
       listServerTools: vi.fn(),
       closeAllConnections: vi.fn(),
       closeConnection: vi.fn(),
-    } as unknown as McpGatewayService;
+    } as unknown) as McpGatewayService;
 
-    mockPaymentService = {
+    mockPaymentService = ({
       signPaymentTransaction: vi.fn(),
       validatePayment: vi.fn(),
       getPaymentMethods: vi.fn(),
-    } as unknown as BlockchainPaymentService;
+    } as unknown) as BlockchainPaymentService;
 
     // Replace constructors with our mocks
     vi.mocked(McpGatewayService).mockImplementation(() => mockMcpGateway);
-    vi.mocked(BlockchainPaymentService).mockImplementation(() => mockPaymentService);
+    vi.mocked(BlockchainPaymentService).mockImplementation(
+      () => mockPaymentService
+    );
 
     controller = new ExecutionController();
     vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -79,7 +84,9 @@ describe('ExecutionController', () => {
         mcpServerUrl: 'https://test-server.com',
       };
 
-      mockMcpGateway.callServerTool.mockRejectedValue(new Error('Connection failed'));
+      mockMcpGateway.callServerTool.mockRejectedValue(
+        new Error('Connection failed')
+      );
 
       const result = await controller.handlePriceListing(request);
 
@@ -100,7 +107,7 @@ describe('ExecutionController', () => {
       const mockPaymentMethodsData = {
         paymentMethods: ['USDC_BASE_MAINNET'],
         walletAddresses: {
-          'USDC_BASE_MAINNET': '0xwallet',
+          USDC_BASE_MAINNET: '0xwallet',
         },
       };
 
@@ -126,7 +133,9 @@ describe('ExecutionController', () => {
         mcpServerUrl: 'https://test-server.com',
       };
 
-      mockMcpGateway.callServerTool.mockRejectedValue(new Error('Connection failed'));
+      mockMcpGateway.callServerTool.mockRejectedValue(
+        new Error('Connection failed')
+      );
 
       const result = await controller.handlePaymentMethods(request);
 
@@ -151,7 +160,8 @@ describe('ExecutionController', () => {
       expect(mockMcpGateway.callServerTool).not.toHaveBeenCalled();
       expect(result).toEqual({
         success: false,
-        error: 'itemPrice, serverWalletAddress, and paymentMethod are required for make-purchase',
+        error:
+          'itemPrice, serverWalletAddress, and paymentMethod are required for make-purchase',
       });
     });
 
@@ -177,7 +187,9 @@ describe('ExecutionController', () => {
         toolResponse: { data: 'test-data' },
       };
 
-      mockPaymentService.signPaymentTransaction.mockResolvedValue(mockSignedPayment);
+      mockPaymentService.signPaymentTransaction.mockResolvedValue(
+        mockSignedPayment
+      );
       mockMcpGateway.callServerTool.mockResolvedValue(mockPurchaseResult);
 
       const result = await controller.handleMakePurchase(request);
@@ -266,7 +278,9 @@ describe('ExecutionController', () => {
       expect(mockMcpGateway.callServerTool).toHaveBeenCalledWith(
         'https://test-server.com',
         'custom-tool',
-        { param1: 'value1' }
+        {
+          param1: 'value1',
+        }
       );
 
       expect(result).toEqual({
@@ -302,7 +316,9 @@ describe('ExecutionController', () => {
         toolName: 'custom-tool',
       };
 
-      mockMcpGateway.callServerTool.mockRejectedValue(new Error('Tool execution failed'));
+      mockMcpGateway.callServerTool.mockRejectedValue(
+        new Error('Tool execution failed')
+      );
 
       const result = await controller.handleCallServerTool(request);
 
@@ -325,7 +341,9 @@ describe('ExecutionController', () => {
 
       const result = await controller.handleListTools(request);
 
-      expect(mockMcpGateway.listServerTools).toHaveBeenCalledWith('https://test-server.com');
+      expect(mockMcpGateway.listServerTools).toHaveBeenCalledWith(
+        'https://test-server.com'
+      );
       expect(result).toEqual({
         success: true,
         data: mockTools,
@@ -338,7 +356,9 @@ describe('ExecutionController', () => {
         mcpServerUrl: 'https://test-server.com',
       };
 
-      mockMcpGateway.listServerTools.mockRejectedValue(new Error('Connection failed'));
+      mockMcpGateway.listServerTools.mockRejectedValue(
+        new Error('Connection failed')
+      );
 
       const result = await controller.handleListTools(request);
 
@@ -353,18 +373,28 @@ describe('ExecutionController', () => {
     it('should return true if connection is successful', async () => {
       mockMcpGateway.getConnection.mockResolvedValue({} as any);
 
-      const result = await controller.validateServerAccess('https://test-server.com');
+      const result = await controller.validateServerAccess(
+        'https://test-server.com'
+      );
 
-      expect(mockMcpGateway.getConnection).toHaveBeenCalledWith('https://test-server.com');
+      expect(mockMcpGateway.getConnection).toHaveBeenCalledWith(
+        'https://test-server.com'
+      );
       expect(result).toBe(true);
     });
 
     it('should return false if connection fails', async () => {
-      mockMcpGateway.getConnection.mockRejectedValue(new Error('Connection failed'));
+      mockMcpGateway.getConnection.mockRejectedValue(
+        new Error('Connection failed')
+      );
 
-      const result = await controller.validateServerAccess('https://test-server.com');
+      const result = await controller.validateServerAccess(
+        'https://test-server.com'
+      );
 
-      expect(mockMcpGateway.getConnection).toHaveBeenCalledWith('https://test-server.com');
+      expect(mockMcpGateway.getConnection).toHaveBeenCalledWith(
+        'https://test-server.com'
+      );
       expect(result).toBe(false);
       expect(console.warn).toHaveBeenCalled();
     });

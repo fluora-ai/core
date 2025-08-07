@@ -1,6 +1,10 @@
 import { PaymentMethods } from '../schemas.js';
 import { exact } from 'x402/schemes';
+import { Network, PaymentPayload, PaymentRequirements } from 'x402/types';
+import { processPriceToAtomicAmount } from 'x402/shared';
+import { http, Hex, createWalletClient, publicActions } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
+import { baseSepolia, base, Chain } from 'viem/chains';
 
 export interface PaymentTransaction {
   transactionHash: string;
@@ -81,7 +85,7 @@ export class BlockchainPaymentService {
         transactionHash,
         amount: '0',
         currency: this.getCurrencyFromPaymentMethod(paymentMethod),
-        chain: this.getChainFromPaymentMethod(paymentMethod),
+        chain: this.getNetworkFromPaymentMethod(paymentMethod),
         fromAddress: '0x0000000000000000000000000000000000000000',
         toAddress: '0x0000000000000000000000000000000000000000',
         timestamp: Date.now(),
@@ -122,30 +126,100 @@ export class BlockchainPaymentService {
     amount: number,
     _recipientAddress: string,
     paymentMethod: PaymentMethods,
-    _pkpPrivateKey?: string
+    _pkpPrivateKey?: string // Buyer private key
   ): Promise<string> {
-    // TODO: Implement actual lit-protocol signing
-    // This should use the PKP to sign USDC transfer transactions
+    try {
+      const currency = this.getCurrencyFromPaymentMethod(paymentMethod);
+      const chain = this.getChainFromPaymentMethod(paymentMethod);
 
-    const currency = this.getCurrencyFromPaymentMethod(paymentMethod);
-    const chain = this.getChainFromPaymentMethod(paymentMethod);
+      console.warn(
+        `Creating signed ${currency} transaction on ${chain} for ${amount}`
+      );
 
-    console.warn(
-      `Creating signed ${currency} transaction on ${chain} for ${amount}`
-    );
+      // Create a wallet client for the specified chain
+      const privateKey =
+        (_pkpPrivateKey as Hex) || (`0x${_pkpPrivateKey}` as Hex);
+      const account = privateKeyToAccount(privateKey);
+      const walletClient = createWalletClient({
+        transport: http(),
+        chain,
+        account,
+      }).extend(publicActions);
 
-    // Placeholder - should return actual signed transaction hex
-    return await Promise.resolve(
-      '0x0000000000000000000000000000000000000000000000000000000000000000'
-    );
+      // Create payment requirements
+      const paymentRequirements = this.createExactPaymentRequirements(
+        amount,
+        paymentMethod,
+        _recipientAddress
+      );
+
+      // Create payment header
+      const paymentHeader = exact.evm.createPaymentHeader(
+        walletClient,
+        1,
+        paymentRequirements
+      );
+
+      return paymentHeader;
+    } catch (error) {
+      console.error('Error creating signed transaction:', error);
+      throw new Error('Failed to create signed transaction');
+    }
   }
 
   private getCurrencyFromPaymentMethod(paymentMethod: PaymentMethods): string {
     return paymentMethod.split('_')[0]; // 'USDC'
   }
 
-  private getChainFromPaymentMethod(paymentMethod: PaymentMethods): string {
-    const parts = paymentMethod.split('_');
-    return parts.slice(1).join('_'); // 'BASE_MAINNET' or 'BASE_SEPOLIA'
+  private getChainFromPaymentMethod(paymentMethod: PaymentMethods): Chain {
+    switch (paymentMethod) {
+      case PaymentMethods.USDC_BASE_MAINNET:
+        return base;
+      case PaymentMethods.USDC_BASE_SEPOLIA:
+        return baseSepolia;
+      default:
+        throw new Error(`Unsupported payment method: ${paymentMethod}`);
+    }
+  }
+
+  private getNetworkFromPaymentMethod(paymentMethod: PaymentMethods): string {
+    switch (paymentMethod) {
+      case PaymentMethods.USDC_BASE_MAINNET:
+        return 'base';
+      case PaymentMethods.USDC_BASE_SEPOLIA:
+        return 'base-sepolia';
+      default:
+        throw new Error(`Unsupported payment method: ${paymentMethod}`);
+    }
+  }
+
+  private createExactPaymentRequirements(
+    amount: number,
+    paymentMethod: PaymentMethods,
+    recipientAddress: string
+  ): PaymentRequirements {
+    const network = this.getNetworkFromPaymentMethod(paymentMethod) as Network;
+    const atomicAmountForAsset = processPriceToAtomicAmount(amount, network);
+    if ('error' in atomicAmountForAsset) {
+      throw new Error(atomicAmountForAsset.error);
+    }
+    const { maxAmountRequired, asset } = atomicAmountForAsset;
+
+    // create requirements
+    const paymentRequirements: PaymentRequirements = {
+      scheme: 'exact',
+      network,
+      maxAmountRequired,
+      resource: 'https://fluora.ai',
+      description: 'Payment for Fluora Marketplace',
+      mimeType: 'application/json',
+      payTo: recipientAddress,
+      maxTimeoutSeconds: 300,
+      asset: asset.address,
+      outputSchema: undefined,
+      extra: asset?.eip712,
+    };
+
+    return paymentRequirements;
   }
 }

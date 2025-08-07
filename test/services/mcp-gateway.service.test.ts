@@ -1,30 +1,33 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { McpGatewayService, FluoraMcpClient } from '@/services/mcp-gateway.service';
-import { FluoraMcpClientSSE } from '@/services/fluora-mcp-client-sse';
-import { FluoraMcpClientStreamable } from '@/services/fluora-mcp-client-streamable';
+import {
+  McpGatewayService,
+  FluoraMcpClient,
+} from '../../src/services/mcp-gateway.service';
+import { FluoraMcpClientSSE } from '../../src/services/fluora-mcp-client-sse';
+import { FluoraMcpClientStreamable } from '../../src/services/fluora-mcp-client-streamable';
 
 // Mock the client implementations
-vi.mock('@/services/fluora-mcp-client-sse');
-vi.mock('@/services/fluora-mcp-client-streamable');
+vi.mock('../../src/services/fluora-mcp-client-sse');
+vi.mock('../../src/services/fluora-mcp-client-streamable');
 
 describe('McpGatewayService', () => {
   let service: McpGatewayService;
   const mockServerUrl = 'https://mock-server.com';
 
   // Create mock implementations
-  const mockSseClient = {
+  const mockSseClient = ({
     connect: vi.fn(),
     disconnect: vi.fn(),
     callTool: vi.fn(),
     listTools: vi.fn(),
-  } as unknown as FluoraMcpClientSSE;
+  } as unknown) as FluoraMcpClientSSE;
 
-  const mockStreamableClient = {
+  const mockStreamableClient = ({
     connect: vi.fn(),
     disconnect: vi.fn(),
     callTool: vi.fn(),
     listTools: vi.fn(),
-  } as unknown as FluoraMcpClientStreamable;
+  } as unknown) as FluoraMcpClientStreamable;
 
   beforeEach(() => {
     service = new McpGatewayService();
@@ -32,7 +35,9 @@ describe('McpGatewayService', () => {
 
     // Set up the default mock implementations
     vi.mocked(FluoraMcpClientSSE).mockImplementation(() => mockSseClient);
-    vi.mocked(FluoraMcpClientStreamable).mockImplementation(() => mockStreamableClient);
+    vi.mocked(FluoraMcpClientStreamable).mockImplementation(
+      () => mockStreamableClient
+    );
   });
 
   afterEach(() => {
@@ -53,7 +58,9 @@ describe('McpGatewayService', () => {
 
     it('should fallback to Streamable client if SSE fails', async () => {
       // Make SSE client fail
-      mockSseClient.connect.mockRejectedValue(new Error('SSE connection failed'));
+      mockSseClient.connect.mockRejectedValue(
+        new Error('SSE connection failed')
+      );
       mockStreamableClient.connect.mockResolvedValue(undefined);
 
       const result = await service.getConnection(mockServerUrl);
@@ -92,7 +99,11 @@ describe('McpGatewayService', () => {
       mockSseClient.connect.mockResolvedValue(undefined);
       mockSseClient.callTool.mockResolvedValue(expectedResult);
 
-      const result = await service.callServerTool(mockServerUrl, toolName, args);
+      const result = await service.callServerTool(
+        mockServerUrl,
+        toolName,
+        args
+      );
 
       expect(mockSseClient.connect).toHaveBeenCalledWith(mockServerUrl);
       expect(mockSseClient.callTool).toHaveBeenCalledWith(toolName, args);
@@ -126,7 +137,10 @@ describe('McpGatewayService', () => {
 
       // Set up the connections map manually to ensure our mocks are used
       (service as any).connections.set(mockServerUrl, mockSseClient);
-      (service as any).connections.set('https://another-server.com', mockStreamableClient);
+      (service as any).connections.set(
+        'https://another-server.com',
+        mockStreamableClient
+      );
 
       await service.closeAllConnections();
 
