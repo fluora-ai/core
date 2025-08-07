@@ -1,4 +1,8 @@
-import { FluoraApiService, McpServer, McpServersFilter } from '@/services';
+import {
+  FluoraApiService,
+  McpServer,
+  McpServersFilter,
+} from '../services/index.js';
 
 export interface DiscoveryRequest {
   name?: string;

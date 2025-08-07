@@ -1,5 +1,8 @@
-import { PaymentMethods } from '@/schemas';
-import { BlockchainPaymentService, PaymentTransaction } from '@/services';
+import { PaymentMethods } from '../schemas.js';
+import {
+  BlockchainPaymentService,
+  PaymentTransaction,
+} from '../services/index.js';
 
 export interface PaymentRequest {
   transactionHash?: string;
@@ -63,7 +66,7 @@ export class PaymentController {
     } catch (error) {
       return {
         success: false,
-        error: `Failed to validate payment: ${error.message}`,
+        error: `Failed to validate payment: ${(error as Error).message}`,
       };
     }
   }
@@ -91,7 +94,7 @@ export class PaymentController {
     } catch (error) {
       return {
         success: false,
-        error: `Failed to get purchase history: ${error.message}`,
+        error: `Failed to get purchase history: ${(error as Error).message}`,
       };
     }
   }
@@ -112,7 +115,7 @@ export class PaymentController {
     } catch (error) {
       return {
         success: false,
-        error: `Failed to get payment methods: ${error.message}`,
+        error: `Failed to get payment methods: ${(error as Error).message}`,
       };
     }
   }

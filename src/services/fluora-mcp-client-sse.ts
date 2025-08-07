@@ -1,4 +1,6 @@
-import { FluoraMcpClient } from './mcp-gateway.service';
+import { FluoraMcpClient } from './mcp-gateway.service.js';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 
 export class FluoraMcpClientSSE implements FluoraMcpClient {
   private client: unknown;
@@ -11,13 +13,6 @@ export class FluoraMcpClientSSE implements FluoraMcpClient {
 
   async connect(mcpServerUrl: string): Promise<void> {
     // Implementation mirrors fluora-mcp client-sse.ts
-    const { Client } = await import(
-      '@modelcontextprotocol/sdk/client/index.js'
-    );
-    const { SSEClientTransport } = await import(
-      '@modelcontextprotocol/sdk/client/sse.js'
-    );
-
     this.client = new Client(
       {
         name: 'fluora-client',

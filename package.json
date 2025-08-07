@@ -3,9 +3,9 @@
   "author": "Fluora Team",
   "version": "0.1.1",
   "license": "MIT",
-  "main": "dist/index.js",
-  "module": "dist/core.esm.js",
-  "typings": "dist/index.d.ts",
+  "main": "dist/cjs/index.cjs",
+  "module": "dist/esm/index.js",
+  "typings": "dist/esm/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -15,8 +15,8 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "tsdx watch",
-    "build": "tsdx build",
+    "dev": "tsup --watch",
+    "build": "tsup",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "prepare": "npm run build",
@@ -42,11 +42,11 @@
   },
   "size-limit": [
     {
-      "path": "dist/core.cjs.production.min.js",
+      "path": "dist/cjs/index.cjs",
       "limit": "10 KB"
     },
     {
-      "path": "dist/core.esm.js",
+      "path": "dist/esm/index.js",
       "limit": "10 KB"
     }
   ],
@@ -70,6 +70,7 @@
     "size-limit": "^11.2.0",
     "tsdx": "^0.14.1",
     "tslib": "^2.8.1",
+    "tsup": "^8.5.0",
     "typescript": "^5.8.3",
     "vitest": "^1.0.0"
   },

@@ -1,5 +1,8 @@
-import { FluoraOperation, PaymentMethods } from '@/schemas';
-import { McpGatewayService, BlockchainPaymentService } from '@/services';
+import { FluoraOperation, PaymentMethods } from '../schemas.js';
+import {
+  McpGatewayService,
+  BlockchainPaymentService,
+} from '../services/index.js';
 
 export interface ExecutionRequest {
   operation: FluoraOperation;
@@ -233,7 +236,7 @@ export class ExecutionController {
     } catch (error) {
       console.warn(
         '[execution-controller] Server validation failed:',
-          (error as Error).message
+        (error as Error).message
       );
       return false;
     }

@@ -1,4 +1,6 @@
-import { PaymentMethods } from '@/schemas';
+import { PaymentMethods } from '../schemas.js';
+import { exact } from 'x402/schemes';
+import { privateKeyToAccount } from 'viem/accounts';
 
 export interface PaymentTransaction {
   transactionHash: string;
@@ -133,7 +135,9 @@ export class BlockchainPaymentService {
     );
 
     // Placeholder - should return actual signed transaction hex
-    return await Promise.resolve('0x0000000000000000000000000000000000000000000000000000000000000000');
+    return await Promise.resolve(
+      '0x0000000000000000000000000000000000000000000000000000000000000000'
+    );
   }
 
   private getCurrencyFromPaymentMethod(paymentMethod: PaymentMethods): string {
