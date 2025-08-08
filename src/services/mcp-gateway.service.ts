@@ -13,7 +13,7 @@ export interface FluoraMcpClient {
  * This is the core gateway that maintains compatibility with existing tools
  */
 export class McpGatewayService {
-  private connections: Map<string, FluoraMcpClient> = new Map();
+  private readonly connections: Map<string, FluoraMcpClient> = new Map();
 
   /**
    * Get or create a connection to an MCP server

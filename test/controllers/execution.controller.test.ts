@@ -54,6 +54,7 @@ describe('ExecutionController', () => {
       const request: ExecutionRequest = {
         serverId: 'server-123',
         mcpServerUrl: 'https://test-server.com',
+        operation: FluoraOperation.PRICE_LISTING,
       };
 
       const mockPriceData = {
@@ -102,6 +103,7 @@ describe('ExecutionController', () => {
       const request: ExecutionRequest = {
         serverId: 'server-123',
         mcpServerUrl: 'https://test-server.com',
+        operation: FluoraOperation.PAYMENT_METHODS,
       };
 
       const mockPaymentMethodsData = {
@@ -151,6 +153,7 @@ describe('ExecutionController', () => {
       const request: ExecutionRequest = {
         serverId: 'server-123',
         mcpServerUrl: 'https://test-server.com',
+        operation: FluoraOperation.MAKE_PURCHASE,
         // Missing required parameters
       };
 
@@ -172,6 +175,7 @@ describe('ExecutionController', () => {
         itemPrice: '0.1',
         serverWalletAddress: '0xserverWallet',
         paymentMethod: PaymentMethods.USDC_BASE_MAINNET,
+        operation: FluoraOperation.MAKE_PURCHASE,
         args: { toolName: 'test-tool' },
       };
 
@@ -198,7 +202,8 @@ describe('ExecutionController', () => {
       expect(mockPaymentService.signPaymentTransaction).toHaveBeenCalledWith(
         0.1, // parsed from '0.1'
         '0xserverWallet',
-        PaymentMethods.USDC_BASE_MAINNET
+        PaymentMethods.USDC_BASE_MAINNET,
+        undefined
       );
 
       // Should call make-purchase with correct parameters
@@ -250,6 +255,7 @@ describe('ExecutionController', () => {
       const request: ExecutionRequest = {
         serverId: 'server-123',
         mcpServerUrl: 'https://test-server.com',
+        operation: FluoraOperation.CALL_SERVER_TOOL,
         // Missing toolName
       };
 
@@ -268,6 +274,7 @@ describe('ExecutionController', () => {
         mcpServerUrl: 'https://test-server.com',
         toolName: 'custom-tool',
         args: { param1: 'value1' },
+        operation: FluoraOperation.CALL_SERVER_TOOL,
       };
 
       const mockToolResult = { data: 'tool-response' };
@@ -294,6 +301,7 @@ describe('ExecutionController', () => {
         serverId: 'server-123',
         mcpServerUrl: 'https://test-server.com',
         toolName: 'custom-tool',
+        operation: FluoraOperation.CALL_SERVER_TOOL,
         // No args
       };
 
@@ -334,6 +342,7 @@ describe('ExecutionController', () => {
       const request: ExecutionRequest = {
         serverId: 'server-123',
         mcpServerUrl: 'https://test-server.com',
+        operation: FluoraOperation.LIST_SERVER_TOOLS,
       };
 
       const mockTools = ['tool1', 'tool2', 'tool3'];

@@ -36,7 +36,7 @@ export interface SignedTransaction {
  */
 export class BlockchainPaymentService {
   /**
-   * Sign a payment transaction using lit-protocol
+   * Sign a payment transaction using x402
    * This replaces PaymentsTools.signTransaction from monetized-mcp-sdk
    */
   async signPaymentTransaction(
@@ -45,17 +45,12 @@ export class BlockchainPaymentService {
     paymentMethod: PaymentMethods,
     pkpPrivateKey?: string
   ): Promise<SignedTransaction> {
-    // This will integrate with lit-protocol for transaction signing
-    // For now, this is a placeholder that mirrors the existing pattern
-
     console.warn('[blockchain-payment.service] Signing payment transaction:', {
       amount,
       recipientAddress,
       paymentMethod,
     });
 
-    // TODO: Implement actual lit-protocol transaction signing
-    // This should replace the PaymentsTools.signTransaction call
     const signedTransaction = await this.createSignedTransaction(
       amount,
       recipientAddress,
@@ -168,7 +163,6 @@ export class BlockchainPaymentService {
     paymentMethods: PaymentMethods[];
     walletAddresses: Record<PaymentMethods, string>;
   }> {
-    // TODO: Get actual wallet addresses from lit-protocol PKP
     return Promise.resolve({
       paymentMethods: [
         PaymentMethods.USDC_BASE_MAINNET,
@@ -184,7 +178,7 @@ export class BlockchainPaymentService {
   }
 
   /**
-   * Create signed transaction using lit-protocol
+   * Create signed transaction using x402
    */
   private async createSignedTransaction(
     amount: number,
@@ -197,12 +191,11 @@ export class BlockchainPaymentService {
       const chain = this.getChainFromPaymentMethod(paymentMethod);
 
       console.warn(
-        `Creating signed ${currency} transaction on ${chain} for ${amount}`
+        `Creating signed ${currency} transaction on ${chain.name} for ${amount}`
       );
 
       // Create a wallet client for the specified chain
-      const privateKey =
-        (_pkpPrivateKey as Hex) || (`0x${_pkpPrivateKey}` as Hex);
+      const privateKey = (_pkpPrivateKey as Hex) || `0x${_pkpPrivateKey}`;
       const account = privateKeyToAccount(privateKey);
       const walletClient = createWalletClient({
         transport: http(),
@@ -242,7 +235,9 @@ export class BlockchainPaymentService {
       case PaymentMethods.USDC_BASE_SEPOLIA:
         return baseSepolia;
       default:
-        throw new Error(`Unsupported payment method: ${paymentMethod}`);
+        throw new Error(
+          `Unsupported payment method: ${paymentMethod as string}`
+        );
     }
   }
 
@@ -253,7 +248,9 @@ export class BlockchainPaymentService {
       case PaymentMethods.USDC_BASE_SEPOLIA:
         return 'base-sepolia';
       default:
-        throw new Error(`Unsupported payment method: ${paymentMethod}`);
+        throw new Error(
+          `Unsupported payment method: ${paymentMethod as string}`
+        );
     }
   }
 
@@ -290,7 +287,13 @@ export class BlockchainPaymentService {
   private async verifyPayment(
     signedTransaction: string,
     paymentRequirements: PaymentRequirements
-  ) {
+  ): Promise<{
+    success: boolean;
+    message: string;
+    responseHeader: string;
+    payload?: PaymentPayload;
+    error?: string;
+  }> {
     try {
       const decodedTransaction = exact.evm.decodePayment(signedTransaction);
       const { verify } = useFacilitator(facilitator);
@@ -325,7 +328,13 @@ export class BlockchainPaymentService {
   private async settlePayment(
     decodedTransaction: PaymentPayload,
     paymentRequirements: PaymentRequirements
-  ) {
+  ): Promise<{
+    success: boolean;
+    message: string;
+    responseHeader: string;
+    payload?: PaymentPayload;
+    error?: string;
+  }> {
     try {
       const { settle } = useFacilitator(facilitator);
       const settlement = await settle(decodedTransaction, paymentRequirements);

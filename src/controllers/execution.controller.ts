@@ -30,8 +30,8 @@ export interface ExecutionResult {
  * Handles tool execution, payments, and monetization operations
  */
 export class ExecutionController {
-  private mcpGateway: McpGatewayService;
-  private paymentService: BlockchainPaymentService;
+  private readonly mcpGateway: McpGatewayService;
+  private readonly paymentService: BlockchainPaymentService;
 
   constructor() {
     this.mcpGateway = new McpGatewayService();

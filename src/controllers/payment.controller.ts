@@ -23,7 +23,7 @@ export interface PaymentResult {
  * Provides blockchain-native payment management via lit-protocol
  */
 export class PaymentController {
-  private paymentService: BlockchainPaymentService;
+  private readonly paymentService: BlockchainPaymentService;
 
   constructor() {
     this.paymentService = new BlockchainPaymentService();
