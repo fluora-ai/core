@@ -4,8 +4,8 @@ import { FluoraMcpClientStreamable } from './fluora-mcp-client-streamable';
 export interface FluoraMcpClient {
   connect(mcpServerUrl: string): Promise<void>;
   disconnect(): Promise<void>;
-  callTool(toolName: string, toolParams?: any): Promise<any>;
-  listTools(): Promise<any>;
+  callTool(toolName: string, toolParams?: Record<string, unknown>): Promise<unknown>;
+  listTools(): Promise<unknown>;
 }
 
 /**
@@ -31,7 +31,7 @@ export class McpGatewayService {
       // Try SSE client first (preferred)
       client = new FluoraMcpClientSSE();
       await client.connect(mcpServerUrl);
-    } catch (error) {
+    } catch {
       // Fallback to Streamable client
       client = new FluoraMcpClientStreamable();
       await client.connect(mcpServerUrl);
@@ -47,8 +47,8 @@ export class McpGatewayService {
   async callServerTool(
     mcpServerUrl: string,
     toolName: string,
-    args: Record<string, any>
-  ): Promise<any> {
+    args: Record<string, unknown>
+  ): Promise<unknown> {
     const client = await this.getConnection(mcpServerUrl);
     return await client.callTool(toolName, args);
   }
@@ -56,7 +56,7 @@ export class McpGatewayService {
   /**
    * List available tools on a MonetizedMCPServer
    */
-  async listServerTools(mcpServerUrl: string): Promise<any> {
+  async listServerTools(mcpServerUrl: string): Promise<unknown> {
     const client = await this.getConnection(mcpServerUrl);
     return await client.listTools();
   }

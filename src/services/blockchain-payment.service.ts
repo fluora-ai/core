@@ -1,4 +1,4 @@
-import { PaymentMethods } from '../schemas';
+import { PaymentMethods } from '@/schemas';
 
 export interface PaymentTransaction {
   transactionHash: string;
@@ -35,7 +35,7 @@ export class BlockchainPaymentService {
     // This will integrate with lit-protocol for transaction signing
     // For now, this is a placeholder that mirrors the existing pattern
 
-    console.log('[blockchain-payment.service] Signing payment transaction:', {
+    console.warn('[blockchain-payment.service] Signing payment transaction:', {
       amount,
       recipientAddress,
       paymentMethod,
@@ -69,13 +69,13 @@ export class BlockchainPaymentService {
       // TODO: Implement blockchain validation using lit-protocol
       // Check if transaction exists and is valid for the specified payment method
 
-      console.log('[blockchain-payment.service] Validating payment:', {
+      console.warn('[blockchain-payment.service] Validating payment:', {
         transactionHash,
         paymentMethod,
       });
 
       // Placeholder return - should query actual blockchain
-      return {
+      return await Promise.resolve({
         transactionHash,
         amount: '0',
         currency: this.getCurrencyFromPaymentMethod(paymentMethod),
@@ -83,7 +83,7 @@ export class BlockchainPaymentService {
         fromAddress: '0x0000000000000000000000000000000000000000',
         toAddress: '0x0000000000000000000000000000000000000000',
         timestamp: Date.now(),
-      };
+      });
     } catch (error) {
       console.error('Error validating payment:', error);
       return null;
@@ -99,7 +99,7 @@ export class BlockchainPaymentService {
     walletAddresses: Record<PaymentMethods, string>;
   }> {
     // TODO: Get actual wallet addresses from lit-protocol PKP
-    return {
+    return Promise.resolve({
       paymentMethods: [
         PaymentMethods.USDC_BASE_MAINNET,
         PaymentMethods.USDC_BASE_SEPOLIA,
@@ -110,7 +110,7 @@ export class BlockchainPaymentService {
         [PaymentMethods.USDC_BASE_SEPOLIA]:
           '0x0000000000000000000000000000000000000000', // PKP address
       },
-    };
+    });
   }
 
   /**
@@ -128,12 +128,12 @@ export class BlockchainPaymentService {
     const currency = this.getCurrencyFromPaymentMethod(paymentMethod);
     const chain = this.getChainFromPaymentMethod(paymentMethod);
 
-    console.log(
+    console.warn(
       `Creating signed ${currency} transaction on ${chain} for ${amount}`
     );
 
     // Placeholder - should return actual signed transaction hex
-    return '0x0000000000000000000000000000000000000000000000000000000000000000';
+    return await Promise.resolve('0x0000000000000000000000000000000000000000000000000000000000000000');
   }
 
   private getCurrencyFromPaymentMethod(paymentMethod: PaymentMethods): string {
