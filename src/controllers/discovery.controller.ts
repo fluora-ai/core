@@ -1,4 +1,8 @@
-import { FluoraApiService, McpServer, McpServersFilter } from '@/services';
+import {
+  FluoraApiService,
+  McpServer,
+  McpServersFilter,
+} from '../services/index.js';
 
 export interface DiscoveryRequest {
   name?: string;
@@ -18,7 +22,7 @@ export interface DiscoveryResult {
  * Replaces searchFluora, listServers, and getServerInfo from fluora-mcp
  */
 export class DiscoveryController {
-  private apiService: FluoraApiService;
+  private readonly apiService: FluoraApiService;
 
   constructor() {
     this.apiService = new FluoraApiService();

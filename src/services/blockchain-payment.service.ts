@@ -1,11 +1,27 @@
-import { PaymentMethods } from '@/schemas';
+import { PaymentMethods } from '../schemas.js';
+
+import {
+  getCurrencyFromPaymentMethod,
+  createSignedTransaction,
+  getNetworkFromPaymentMethod,
+  createx402PaymentRequirements,
+  verifyPayment,
+  settlePayment,
+} from '../utils/index.js';
+
+export enum PaymentStatus {
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  PENDING = 'pending',
+}
 
 export interface PaymentTransaction {
+  status: PaymentStatus;
   transactionHash: string;
   amount: string;
   currency: string;
   chain: string;
-  fromAddress: string;
+  fromAddress: string | null;
   toAddress: string;
   timestamp: number;
 }
@@ -17,13 +33,26 @@ export interface SignedTransaction {
   recipientAddress: string;
 }
 
+export interface ServicePaymentDetails {
+  amount: number;
+  recipientAddress: string;
+}
+
+export interface AvailablePaymentMethods {
+  paymentMethods: PaymentMethods[];
+  walletAddresses: Record<PaymentMethods, `0x${string}`>;
+}
+
 /**
  * Service for handling blockchain payments via lit-protocol
  * Replaces the PaymentsTools from monetized-mcp-sdk
  */
 export class BlockchainPaymentService {
+
+  constructor(public readonly paymentMethods?: AvailablePaymentMethods){}
+
   /**
-   * Sign a payment transaction using lit-protocol
+   * Sign a payment transaction using x402
    * This replaces PaymentsTools.signTransaction from monetized-mcp-sdk
    */
   async signPaymentTransaction(
@@ -32,18 +61,13 @@ export class BlockchainPaymentService {
     paymentMethod: PaymentMethods,
     pkpPrivateKey?: string
   ): Promise<SignedTransaction> {
-    // This will integrate with lit-protocol for transaction signing
-    // For now, this is a placeholder that mirrors the existing pattern
-
     console.warn('[blockchain-payment.service] Signing payment transaction:', {
       amount,
       recipientAddress,
       paymentMethod,
     });
 
-    // TODO: Implement actual lit-protocol transaction signing
-    // This should replace the PaymentsTools.signTransaction call
-    const signedTransaction = await this.createSignedTransaction(
+    const signedTransaction = await createSignedTransaction(
       amount,
       recipientAddress,
       paymentMethod,
@@ -59,89 +83,69 @@ export class BlockchainPaymentService {
   }
 
   /**
-   * Validate a payment transaction on-chain
+   * Validate and settle a payment transaction on-chain
    */
-  async validatePayment(
-    transactionHash: string,
-    paymentMethod: PaymentMethods
-  ): Promise<PaymentTransaction | null> {
-    try {
-      // TODO: Implement blockchain validation using lit-protocol
-      // Check if transaction exists and is valid for the specified payment method
+  async validateAndSettlePayment(
+    { amount, recipientAddress }: ServicePaymentDetails,
+    paymentMethod: PaymentMethods,
+    transactionHash: string
+  ): Promise<PaymentTransaction> {
+    const result: PaymentTransaction = {
+      status: PaymentStatus.PENDING,
+      transactionHash,
+      amount: `${amount}`,
+      currency: getCurrencyFromPaymentMethod(paymentMethod),
+      chain: getNetworkFromPaymentMethod(paymentMethod),
+      fromAddress: null,
+      toAddress: recipientAddress,
+      timestamp: Date.now(),
+    };
 
+    try {
       console.warn('[blockchain-payment.service] Validating payment:', {
         transactionHash,
         paymentMethod,
       });
 
-      // Placeholder return - should query actual blockchain
-      return await Promise.resolve({
+      // Verify
+      const paymentRequirements = createx402PaymentRequirements(
+        amount,
+        paymentMethod,
+        recipientAddress
+      );
+
+      const verifyResponse = await verifyPayment(
         transactionHash,
-        amount: '0',
-        currency: this.getCurrencyFromPaymentMethod(paymentMethod),
-        chain: this.getChainFromPaymentMethod(paymentMethod),
-        fromAddress: '0x0000000000000000000000000000000000000000',
-        toAddress: '0x0000000000000000000000000000000000000000',
-        timestamp: Date.now(),
-      });
+        paymentRequirements
+      );
+
+      if (!verifyResponse.success) {
+        console.error('Payment verification failed:', verifyResponse.message);
+        result.status = PaymentStatus.FAILED;
+        return result;
+      }
+
+      // Settle
+      if (!verifyResponse.payload) {
+        throw new Error('No valid payload returned from payment verification');
+      }
+      const settleResponse = await settlePayment(
+        verifyResponse.payload,
+        paymentRequirements
+      );
+
+      if (settleResponse.success) {
+        console.error('Payment settled successfully:', settleResponse);
+        result.status = PaymentStatus.COMPLETED;
+        result.fromAddress = verifyResponse.payload.payload.authorization.from;
+      } else {
+        result.status = PaymentStatus.FAILED;
+      }
+      return result;
     } catch (error) {
-      console.error('Error validating payment:', error);
-      return null;
+      console.error('Error validating and settling payment:', error);
+      result.status = PaymentStatus.FAILED;
+      return result;
     }
-  }
-
-  /**
-   * Get available payment methods and their corresponding wallet addresses
-   * This replaces the payment-methods tool from MonetizedMCPServer
-   */
-  async getPaymentMethods(): Promise<{
-    paymentMethods: PaymentMethods[];
-    walletAddresses: Record<PaymentMethods, string>;
-  }> {
-    // TODO: Get actual wallet addresses from lit-protocol PKP
-    return Promise.resolve({
-      paymentMethods: [
-        PaymentMethods.USDC_BASE_MAINNET,
-        PaymentMethods.USDC_BASE_SEPOLIA,
-      ],
-      walletAddresses: {
-        [PaymentMethods.USDC_BASE_MAINNET]:
-          '0x0000000000000000000000000000000000000000', // PKP address
-        [PaymentMethods.USDC_BASE_SEPOLIA]:
-          '0x0000000000000000000000000000000000000000', // PKP address
-      },
-    });
-  }
-
-  /**
-   * Create signed transaction using lit-protocol
-   */
-  private async createSignedTransaction(
-    amount: number,
-    _recipientAddress: string,
-    paymentMethod: PaymentMethods,
-    _pkpPrivateKey?: string
-  ): Promise<string> {
-    // TODO: Implement actual lit-protocol signing
-    // This should use the PKP to sign USDC transfer transactions
-
-    const currency = this.getCurrencyFromPaymentMethod(paymentMethod);
-    const chain = this.getChainFromPaymentMethod(paymentMethod);
-
-    console.warn(
-      `Creating signed ${currency} transaction on ${chain} for ${amount}`
-    );
-
-    // Placeholder - should return actual signed transaction hex
-    return await Promise.resolve('0x0000000000000000000000000000000000000000000000000000000000000000');
-  }
-
-  private getCurrencyFromPaymentMethod(paymentMethod: PaymentMethods): string {
-    return paymentMethod.split('_')[0]; // 'USDC'
-  }
-
-  private getChainFromPaymentMethod(paymentMethod: PaymentMethods): string {
-    const parts = paymentMethod.split('_');
-    return parts.slice(1).join('_'); // 'BASE_MAINNET' or 'BASE_SEPOLIA'
   }
 }

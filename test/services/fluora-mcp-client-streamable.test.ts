@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { FluoraMcpClientStreamable } from '@/services/fluora-mcp-client-streamable';
+import { FluoraMcpClientStreamable } from '../../src/services/fluora-mcp-client-streamable';
 
 // Mock the MCP SDK modules
 vi.mock('@modelcontextprotocol/sdk/client/index.js', () => ({

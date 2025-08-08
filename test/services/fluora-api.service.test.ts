@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { FluoraApiService } from '@/services/fluora-api.service';
+import { FluoraApiService } from '../../src/services/fluora-api.service';
 import axios from 'axios';
 
 // Mock axios

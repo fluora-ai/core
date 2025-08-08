@@ -1,4 +1,6 @@
-import { FluoraMcpClient } from './mcp-gateway.service';
+import { FluoraMcpClient } from './mcp-gateway.service.js';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
 export class FluoraMcpClientStreamable implements FluoraMcpClient {
   private client: unknown;
@@ -11,13 +13,6 @@ export class FluoraMcpClientStreamable implements FluoraMcpClient {
 
   async connect(mcpServerUrl: string): Promise<void> {
     // Implementation mirrors fluora-mcp client-streamable.ts
-    const { Client } = await import(
-      '@modelcontextprotocol/sdk/client/index.js'
-    );
-    const { StreamableHTTPClientTransport } = await import(
-      '@modelcontextprotocol/sdk/client/streamableHttp.js'
-    );
-
     this.client = new Client(
       {
         name: 'fluora-streamable-client',

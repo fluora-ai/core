@@ -1,5 +1,8 @@
-import { FluoraOperation, PaymentMethods } from '@/schemas';
-import { McpGatewayService, BlockchainPaymentService } from '@/services';
+import { FluoraOperation, PaymentMethods } from '../schemas.js';
+import {
+  McpGatewayService,
+  BlockchainPaymentService,
+} from '../services/index.js';
 
 export interface ExecutionRequest {
   operation: FluoraOperation;
@@ -10,6 +13,7 @@ export interface ExecutionRequest {
   itemPrice?: string;
   serverWalletAddress?: string;
   paymentMethod?: PaymentMethods;
+  pkpPrivateKey?: string;
 }
 
 // Create a type for the execution result with a union for the different tools results
@@ -26,8 +30,8 @@ export interface ExecutionResult {
  * Handles tool execution, payments, and monetization operations
  */
 export class ExecutionController {
-  private mcpGateway: McpGatewayService;
-  private paymentService: BlockchainPaymentService;
+  private readonly mcpGateway: McpGatewayService;
+  private readonly paymentService: BlockchainPaymentService;
 
   constructor() {
     this.mcpGateway = new McpGatewayService();
@@ -124,7 +128,8 @@ export class ExecutionController {
       const signedPayment = await this.paymentService.signPaymentTransaction(
         parseFloat(request.itemPrice),
         request.serverWalletAddress,
-        request.paymentMethod
+        request.paymentMethod,
+        request.pkpPrivateKey
       );
 
       // Prepare arguments for the MonetizedMCPServer make-purchase tool
@@ -233,7 +238,7 @@ export class ExecutionController {
     } catch (error) {
       console.warn(
         '[execution-controller] Server validation failed:',
-          (error as Error).message
+        (error as Error).message
       );
       return false;
     }
