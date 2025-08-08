@@ -1,7 +1,7 @@
 {
   "name": "@fluora-ai/core",
   "author": "Fluora Team",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "MIT",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.js",
