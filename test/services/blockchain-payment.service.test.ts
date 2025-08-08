@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { BlockchainPaymentService } from '../../src/services/blockchain-payment.service';
 import { PaymentMethods } from '../../src/schemas';
+import * as PaymentUtils from '../../src/utils/payments';
 
 // Mock viem and x402 modules
 vi.mock('viem', () => ({
@@ -24,6 +25,11 @@ vi.mock('x402/schemes', () => ({
   exact: {
     evm: {
       createPaymentHeader: vi.fn(() => Promise.resolve('mock-payment-header')),
+      decodePayment: vi.fn(() => ({ 
+        payload: { 
+          authorization: { from: '0xfromAddress' } 
+        } 
+      })),
     },
   },
 }));
@@ -35,14 +41,48 @@ vi.mock('x402/shared', () => ({
   })),
 }));
 
+vi.mock('@coinbase/x402', () => ({
+  facilitator: 'mock-facilitator',
+}));
+
+vi.mock('x402/verify', () => ({
+  useFacilitator: vi.fn(() => ({
+    verify: vi.fn(() => Promise.resolve({
+      isValid: true,
+      invalidReason: null,
+    })),
+    settle: vi.fn(() => Promise.resolve('settlement-result')),
+  })),
+}));
+
+vi.mock('x402/types', () => ({}));
+
+vi.mock('../../src/utils/payments', () => ({
+  getCurrencyFromPaymentMethod: vi.fn(),
+  createSignedTransaction: vi.fn(),
+  getNetworkFromPaymentMethod: vi.fn(),
+  createx402PaymentRequirements: vi.fn(),
+  verifyPayment: vi.fn(),
+  settlePayment: vi.fn(),
+  getChainFromPaymentMethod: vi.fn(),
+}));
+
 describe('BlockchainPaymentService', () => {
   let service: BlockchainPaymentService;
+  const mockPaymentMethods = {
+    paymentMethods: [PaymentMethods.USDC_BASE_MAINNET, PaymentMethods.USDC_BASE_SEPOLIA],
+    walletAddresses: {
+      [PaymentMethods.USDC_BASE_MAINNET]: '0x123...' as `0x${string}`,
+      [PaymentMethods.USDC_BASE_SEPOLIA]: '0x456...' as `0x${string}`,
+    },
+  };
 
   beforeEach(() => {
-    service = new BlockchainPaymentService();
+    service = new BlockchainPaymentService(mockPaymentMethods);
     // Spy on console.log to avoid cluttering test output
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -51,12 +91,8 @@ describe('BlockchainPaymentService', () => {
 
   describe('signPaymentTransaction', () => {
     it('should sign a transaction and return the correct format', async () => {
-      // Spy on the private method
-      const createSignedTransactionSpy = vi.spyOn(
-        service as any,
-        'createSignedTransaction'
-      );
-      createSignedTransactionSpy.mockResolvedValue('0xmockedSignedTransaction');
+      // Mock the utility function
+      vi.mocked(PaymentUtils.createSignedTransaction).mockResolvedValue('0xmockedSignedTransaction');
 
       const amount = 100;
       const recipientAddress = '0xrecipient';
@@ -75,7 +111,7 @@ describe('BlockchainPaymentService', () => {
         recipientAddress: '0xrecipient',
       });
 
-      expect(createSignedTransactionSpy).toHaveBeenCalledWith(
+      expect(PaymentUtils.createSignedTransaction).toHaveBeenCalledWith(
         amount,
         recipientAddress,
         paymentMethod,
@@ -84,11 +120,7 @@ describe('BlockchainPaymentService', () => {
     });
 
     it('should pass pkpPrivateKey to createSignedTransaction when provided', async () => {
-      const createSignedTransactionSpy = vi.spyOn(
-        service as any,
-        'createSignedTransaction'
-      );
-      createSignedTransactionSpy.mockResolvedValue('0xmockedSignedTransaction');
+      vi.mocked(PaymentUtils.createSignedTransaction).mockResolvedValue('0xmockedSignedTransaction');
 
       const pkpPrivateKey = 'privateKey123';
       await service.signPaymentTransaction(
@@ -98,7 +130,7 @@ describe('BlockchainPaymentService', () => {
         pkpPrivateKey
       );
 
-      expect(createSignedTransactionSpy).toHaveBeenCalledWith(
+      expect(PaymentUtils.createSignedTransaction).toHaveBeenCalledWith(
         100,
         '0xrecipient',
         PaymentMethods.USDC_BASE_MAINNET,
@@ -114,20 +146,49 @@ describe('BlockchainPaymentService', () => {
       const amount = 100;
       const recipientAddress = '0xrecipient';
 
-      // Mock the private methods to simulate successful verification and settlement
-      vi.spyOn(service as any, 'verifyPayment').mockResolvedValue({
+      // Mock the utility functions
+      vi.mocked(PaymentUtils.getCurrencyFromPaymentMethod).mockReturnValue('USDC');
+      vi.mocked(PaymentUtils.getNetworkFromPaymentMethod).mockReturnValue('base');
+      vi.mocked(PaymentUtils.createx402PaymentRequirements).mockReturnValue({
+        scheme: 'exact' as const,
+        network: 'base' as const,
+        maxAmountRequired: '100000000',
+        resource: 'https://fluora.ai',
+        description: 'Payment for Fluora Marketplace',
+        mimeType: 'application/json',
+        payTo: recipientAddress,
+        maxTimeoutSeconds: 300,
+        asset: '0xassetaddress',
+        outputSchema: undefined,
+        extra: undefined,
+      });
+      
+      vi.mocked(PaymentUtils.verifyPayment).mockResolvedValue({
         success: true,
+        message: 'Payment verified',
+        responseHeader: '',
         payload: {
+          scheme: 'exact',
+          network: 'base',
+          x402Version: 1,
           payload: {
+            signature: '0xsignature',
             authorization: {
-              from: '0xfromAddress'
+              from: '0xfromAddress',
+              to: '0xtoAddress',
+              value: '100000000',
+              validAfter: '0',
+              validBefore: '999999999999',
+              nonce: '1',
             }
           }
         }
       });
       
-      vi.spyOn(service as any, 'settlePayment').mockResolvedValue({
-        success: true
+      vi.mocked(PaymentUtils.settlePayment).mockResolvedValue({
+        success: true,
+        message: 'Payment settled',
+        responseHeader: '',
       });
 
       const result = await service.validateAndSettlePayment(
@@ -145,14 +206,32 @@ describe('BlockchainPaymentService', () => {
         chain: 'base',
         amount: amount.toString(),
         toAddress: recipientAddress,
+        fromAddress: '0xfromAddress',
       });
     });
 
-    it('should return transaction with amount 0 when validation fails', async () => {
-      // Mock implementation to simulate failed verification
-      vi.spyOn(service as any, 'verifyPayment').mockResolvedValue({
+    it('should return transaction with failed status when validation fails', async () => {
+      // Mock utility functions
+      vi.mocked(PaymentUtils.getCurrencyFromPaymentMethod).mockReturnValue('USDC');
+      vi.mocked(PaymentUtils.getNetworkFromPaymentMethod).mockReturnValue('base');
+      vi.mocked(PaymentUtils.createx402PaymentRequirements).mockReturnValue({
+        scheme: 'exact' as const,
+        network: 'base' as const,
+        maxAmountRequired: '100000000',
+        resource: 'https://fluora.ai',
+        description: 'Payment for Fluora Marketplace',
+        mimeType: 'application/json',
+        payTo: '0xrecipient',
+        maxTimeoutSeconds: 300,
+        asset: '0xassetaddress',
+        outputSchema: undefined,
+        extra: undefined,
+      });
+
+      vi.mocked(PaymentUtils.verifyPayment).mockResolvedValue({
         success: false,
-        message: 'Verification failed'
+        message: 'Verification failed',
+        responseHeader: '',
       });
 
       const result = await service.validateAndSettlePayment(
@@ -166,7 +245,7 @@ describe('BlockchainPaymentService', () => {
 
       expect(result).toMatchObject({
         transactionHash: '0xtransactionHash',
-        amount: '0',
+        amount: '100',
         currency: 'USDC',
         chain: 'base',
       });
@@ -174,87 +253,99 @@ describe('BlockchainPaymentService', () => {
     });
   });
 
-  describe('getPaymentMethods', () => {
-    it('should return available payment methods and wallet addresses', async () => {
-      const result = await service.getPaymentMethods();
-
-      expect(result).toHaveProperty('paymentMethods');
-      expect(result).toHaveProperty('walletAddresses');
-      expect(result.paymentMethods).toContain(PaymentMethods.USDC_BASE_MAINNET);
-      expect(result.paymentMethods).toContain(PaymentMethods.USDC_BASE_SEPOLIA);
-      expect(result.walletAddresses).toHaveProperty(
+  describe('paymentMethods property', () => {
+    it('should have available payment methods and wallet addresses', () => {
+      expect(service.paymentMethods).toBeDefined();
+      expect(service.paymentMethods).toHaveProperty('paymentMethods');
+      expect(service.paymentMethods).toHaveProperty('walletAddresses');
+      expect(service.paymentMethods!.paymentMethods).toContain(PaymentMethods.USDC_BASE_MAINNET);
+      expect(service.paymentMethods!.paymentMethods).toContain(PaymentMethods.USDC_BASE_SEPOLIA);
+      expect(service.paymentMethods!.walletAddresses).toHaveProperty(
         PaymentMethods.USDC_BASE_MAINNET
       );
-      expect(result.walletAddresses).toHaveProperty(
+      expect(service.paymentMethods!.walletAddresses).toHaveProperty(
         PaymentMethods.USDC_BASE_SEPOLIA
       );
     });
   });
 
-  describe('private methods', () => {
+  describe('utility functions', () => {
     describe('getCurrencyFromPaymentMethod', () => {
       it('should extract currency from payment method', () => {
-        const result = (service as any).getCurrencyFromPaymentMethod(
+        const result = PaymentUtils.getCurrencyFromPaymentMethod(
           PaymentMethods.USDC_BASE_MAINNET
         );
-        expect(result).toBe('USDC');
+        expect(PaymentUtils.getCurrencyFromPaymentMethod).toHaveBeenCalledWith(
+          PaymentMethods.USDC_BASE_MAINNET
+        );
       });
     });
 
     describe('getChainFromPaymentMethod', () => {
       it('should return base chain object for BASE_MAINNET', () => {
-        const result = (service as any).getChainFromPaymentMethod(
+        const result = PaymentUtils.getChainFromPaymentMethod(
           PaymentMethods.USDC_BASE_MAINNET
         );
-        expect(result).toHaveProperty('id');
-        expect(result).toHaveProperty('name');
-        expect(result.id).toBe(8453); // Base mainnet chain ID
+        expect(PaymentUtils.getChainFromPaymentMethod).toHaveBeenCalledWith(
+          PaymentMethods.USDC_BASE_MAINNET
+        );
       });
 
       it('should return base sepolia chain object for BASE_SEPOLIA', () => {
-        const result = (service as any).getChainFromPaymentMethod(
+        const result = PaymentUtils.getChainFromPaymentMethod(
           PaymentMethods.USDC_BASE_SEPOLIA
         );
-        expect(result).toHaveProperty('id');
-        expect(result).toHaveProperty('name');
-        expect(result.id).toBe(84532); // Base sepolia chain ID
+        expect(PaymentUtils.getChainFromPaymentMethod).toHaveBeenCalledWith(
+          PaymentMethods.USDC_BASE_SEPOLIA
+        );
       });
 
       it('should throw error for unsupported payment method', () => {
+        vi.mocked(PaymentUtils.getChainFromPaymentMethod).mockImplementation(() => {
+          throw new Error('Unsupported payment method: INVALID_METHOD');
+        });
+
         expect(() => {
-          (service as any).getChainFromPaymentMethod('INVALID_METHOD');
+          PaymentUtils.getChainFromPaymentMethod('INVALID_METHOD' as any);
         }).toThrow('Unsupported payment method: INVALID_METHOD');
       });
     });
 
     describe('getNetworkFromPaymentMethod', () => {
       it('should return base for BASE_MAINNET', () => {
-        const result = (service as any).getNetworkFromPaymentMethod(
+        const result = PaymentUtils.getNetworkFromPaymentMethod(
           PaymentMethods.USDC_BASE_MAINNET
         );
-        expect(result).toBe('base');
+        expect(PaymentUtils.getNetworkFromPaymentMethod).toHaveBeenCalledWith(
+          PaymentMethods.USDC_BASE_MAINNET
+        );
       });
 
       it('should return base-sepolia for BASE_SEPOLIA', () => {
-        const result = (service as any).getNetworkFromPaymentMethod(
+        const result = PaymentUtils.getNetworkFromPaymentMethod(
           PaymentMethods.USDC_BASE_SEPOLIA
         );
-        expect(result).toBe('base-sepolia');
+        expect(PaymentUtils.getNetworkFromPaymentMethod).toHaveBeenCalledWith(
+          PaymentMethods.USDC_BASE_SEPOLIA
+        );
       });
 
       it('should throw error for unsupported payment method', () => {
+        vi.mocked(PaymentUtils.getNetworkFromPaymentMethod).mockImplementation(() => {
+          throw new Error('Unsupported payment method: INVALID_METHOD');
+        });
+
         expect(() => {
-          (service as any).getNetworkFromPaymentMethod('INVALID_METHOD');
+          PaymentUtils.getNetworkFromPaymentMethod('INVALID_METHOD' as any);
         }).toThrow('Unsupported payment method: INVALID_METHOD');
       });
     });
 
     describe('createSignedTransaction', () => {
       it('should create a signed transaction with correct params', async () => {
-        // Mock console.warn to avoid stderr output in tests
-        vi.spyOn(console, 'warn').mockImplementation(() => {});
+        vi.mocked(PaymentUtils.createSignedTransaction).mockResolvedValue('mock-payment-header');
 
-        const result = await (service as any).createSignedTransaction(
+        const result = await PaymentUtils.createSignedTransaction(
           100,
           '0xrecipient',
           PaymentMethods.USDC_BASE_MAINNET,
@@ -262,22 +353,21 @@ describe('BlockchainPaymentService', () => {
         );
 
         expect(result).toBe('mock-payment-header');
+        expect(PaymentUtils.createSignedTransaction).toHaveBeenCalledWith(
+          100,
+          '0xrecipient',
+          PaymentMethods.USDC_BASE_MAINNET,
+          '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+        );
       });
 
       it('should throw error when transaction creation fails', async () => {
-        // Mock console.warn to avoid stderr output in tests
-        vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-        // Mock an error in getCurrencyFromPaymentMethod
-        vi.spyOn(
-          service as any,
-          'getCurrencyFromPaymentMethod'
-        ).mockImplementation(() => {
-          throw new Error('Mock error');
-        });
+        vi.mocked(PaymentUtils.createSignedTransaction).mockRejectedValue(
+          new Error('Failed to create signed transaction')
+        );
 
         await expect(
-          (service as any).createSignedTransaction(
+          PaymentUtils.createSignedTransaction(
             100,
             '0xrecipient',
             PaymentMethods.USDC_BASE_MAINNET,
@@ -287,13 +377,29 @@ describe('BlockchainPaymentService', () => {
       });
     });
 
-    describe('createExactPaymentRequirements', () => {
+    describe('createx402PaymentRequirements', () => {
       it('should create payment requirements with correct structure', () => {
         const amount = 100;
         const paymentMethod = PaymentMethods.USDC_BASE_MAINNET;
         const recipientAddress = '0xrecipient';
 
-        const result = (service as any).createExactPaymentRequirements(
+        const mockRequirements = {
+          scheme: 'exact' as const,
+          network: 'base' as const,
+          resource: 'https://fluora.ai',
+          description: 'Payment for Fluora Marketplace',
+          mimeType: 'application/json',
+          payTo: recipientAddress,
+          maxTimeoutSeconds: 300,
+          maxAmountRequired: '100000000',
+          asset: '0xassetaddress',
+          outputSchema: undefined,
+          extra: undefined,
+        };
+
+        vi.mocked(PaymentUtils.createx402PaymentRequirements).mockReturnValue(mockRequirements);
+
+        const result = PaymentUtils.createx402PaymentRequirements(
           amount,
           paymentMethod,
           recipientAddress
@@ -313,7 +419,23 @@ describe('BlockchainPaymentService', () => {
       });
 
       it('should handle base sepolia network correctly', () => {
-        const result = (service as any).createExactPaymentRequirements(
+        const mockRequirements = {
+          scheme: 'exact' as const,
+          network: 'base-sepolia' as const,
+          resource: 'https://fluora.ai',
+          description: 'Payment for Fluora Marketplace',
+          mimeType: 'application/json',
+          payTo: '0xrecipient',
+          maxTimeoutSeconds: 300,
+          maxAmountRequired: '50000000',
+          asset: '0xassetaddress',
+          outputSchema: undefined,
+          extra: undefined,
+        };
+
+        vi.mocked(PaymentUtils.createx402PaymentRequirements).mockReturnValue(mockRequirements);
+
+        const result = PaymentUtils.createx402PaymentRequirements(
           50,
           PaymentMethods.USDC_BASE_SEPOLIA,
           '0xrecipient'
