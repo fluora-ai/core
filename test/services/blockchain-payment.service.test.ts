@@ -78,6 +78,9 @@ describe('BlockchainPaymentService', () => {
   };
 
   beforeEach(() => {
+    // Clear all mocks first
+    vi.clearAllMocks();
+    
     service = new BlockchainPaymentService(mockPaymentMethods);
     // Spy on console.log to avoid cluttering test output
     vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -250,6 +253,125 @@ describe('BlockchainPaymentService', () => {
         chain: 'base',
       });
       expect(console.error).toHaveBeenCalled();
+    });
+
+    it('should handle case when verifyPayment returns no payload', async () => {
+      // Mock utility functions
+      vi.mocked(PaymentUtils.getCurrencyFromPaymentMethod).mockReturnValue('USDC');
+      vi.mocked(PaymentUtils.getNetworkFromPaymentMethod).mockReturnValue('base');
+      vi.mocked(PaymentUtils.createx402PaymentRequirements).mockReturnValue({
+        scheme: 'exact' as const,
+        network: 'base' as const,
+        maxAmountRequired: '100000000',
+        resource: 'https://fluora.ai',
+        description: 'Payment for Fluora Marketplace',
+        mimeType: 'application/json',
+        payTo: '0xrecipient',
+        maxTimeoutSeconds: 300,
+        asset: '0xassetaddress',
+        outputSchema: undefined,
+        extra: undefined,
+      });
+
+      vi.mocked(PaymentUtils.verifyPayment).mockResolvedValue({
+        success: true,
+        message: 'Payment verified',
+        responseHeader: '',
+        // No payload
+      });
+
+      const result = await service.validateAndSettlePayment(
+        {
+          amount: 100,
+          recipientAddress: '0xrecipient',
+        },
+        PaymentMethods.USDC_BASE_MAINNET,
+        '0xtransactionHash'
+      );
+
+      expect(result.status).toBe('failed');
+      expect(console.error).toHaveBeenCalledWith('Error validating and settling payment:', expect.any(Error));
+    });
+
+    it('should handle settlement failure', async () => {
+      // Mock utility functions
+      vi.mocked(PaymentUtils.getCurrencyFromPaymentMethod).mockReturnValue('USDC');
+      vi.mocked(PaymentUtils.getNetworkFromPaymentMethod).mockReturnValue('base');
+      vi.mocked(PaymentUtils.createx402PaymentRequirements).mockReturnValue({
+        scheme: 'exact' as const,
+        network: 'base' as const,
+        maxAmountRequired: '100000000',
+        resource: 'https://fluora.ai',
+        description: 'Payment for Fluora Marketplace',
+        mimeType: 'application/json',
+        payTo: '0xrecipient',
+        maxTimeoutSeconds: 300,
+        asset: '0xassetaddress',
+        outputSchema: undefined,
+        extra: undefined,
+      });
+
+      vi.mocked(PaymentUtils.verifyPayment).mockResolvedValue({
+        success: true,
+        message: 'Payment verified',
+        responseHeader: '',
+        payload: {
+          scheme: 'exact',
+          network: 'base',
+          x402Version: 1,
+          payload: {
+            signature: '0xsignature',
+            authorization: {
+              from: '0xfromAddress',
+              to: '0xtoAddress',
+              value: '100000000',
+              validAfter: '0',
+              validBefore: '999999999999',
+              nonce: '1',
+            }
+          }
+        }
+      });
+
+      vi.mocked(PaymentUtils.settlePayment).mockResolvedValue({
+        success: false,
+        message: 'Settlement failed',
+        responseHeader: '',
+      });
+
+      const result = await service.validateAndSettlePayment(
+        {
+          amount: 100,
+          recipientAddress: '0xrecipient',
+        },
+        PaymentMethods.USDC_BASE_MAINNET,
+        '0xtransactionHash'
+      );
+
+      expect(result.status).toBe('failed');
+    });
+
+    it('should handle general error during validation and settlement', async () => {
+      // Clear previous mocks
+      vi.clearAllMocks();
+      // Re-spy on console methods
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      
+      // Mock utility functions to throw an error
+      vi.mocked(PaymentUtils.getCurrencyFromPaymentMethod).mockImplementation(() => {
+        throw new Error('Mock error');
+      });
+
+      // This test verifies that if the function throws an error outside the try-catch,
+      // it properly propagates the error
+      await expect(service.validateAndSettlePayment(
+        {
+          amount: 100,
+          recipientAddress: '0xrecipient',
+        },
+        PaymentMethods.USDC_BASE_MAINNET,
+        '0xtransactionHash'
+      )).rejects.toThrow('Mock error');
     });
   });
 
