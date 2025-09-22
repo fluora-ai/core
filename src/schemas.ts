@@ -31,83 +31,82 @@ export enum PaymentMethods {
   USDC_BASE_MAINNET = 'USDC_BASE_MAINNET',
 }
 
+export const SearchServerSchema = z.object({
+  operation: z.literal(FluoraOperation.SEARCH_FLUORA),
+  name: z.string().optional(),
+});
+
+export const ListServersSchema = z.object({
+  operation: z.literal(FluoraOperation.LIST_SERVERS),
+  category: z.string().optional(),
+});
+
+export const GetServerInfoSchema = z.object({
+  operation: z.literal(FluoraOperation.GET_SERVER_INFO),
+  serverId: z.string(),
+});
+
+export const PriceListingSchema = z.object({
+  operation: z.literal(FluoraOperation.PRICE_LISTING),
+  serverId: z.string(),
+});
+
+export const PaymentMethodsSchema = z.object({
+  operation: z.literal(FluoraOperation.PAYMENT_METHODS),
+  serverId: z.string(),
+});
+
+export const MakePurchaseSchema = z.object({
+  operation: z.literal(FluoraOperation.MAKE_PURCHASE),
+  serverId: z.string(),
+  itemPrice: z.string().regex(/^\d*\.?\d+$/, 'Invalid price format'),
+  serverWalletAddress: z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid wallet address'),
+});
+
+export const CallServerToolSchema = z.object({
+  operation: z.literal(FluoraOperation.CALL_SERVER_TOOL),
+  serverId: z.string(),
+  toolName: z.string(),
+  args: z.record(z.any()),
+});
+
+export const ListToolsSchema = z.object({
+  operation: z.literal(FluoraOperation.LIST_TOOLS),
+  serverId: z.string(),
+});
+
+export const GetPurchaseHistorySchema = z.object({
+  operation: z.literal(FluoraOperation.GET_PURCHASE_HISTORY),
+  userAddress: z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid address')
+    .optional(),
+});
+
+export const ValidatePaymentSchema = z.object({
+  operation: z.literal(FluoraOperation.VALIDATE_PAYMENT),
+  transactionHash: z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{64}$/, 'Invalid transaction hash'),
+  paymentMethod: z.nativeEnum(PaymentMethods),
+});
+
 /**
- * Tool parameters schema using discriminated union for type safety
+ * Discriminated union created from individual schema objects
  */
-export const toolParamsSchema = z.discriminatedUnion('operation', [
-  // Discovery Operations
-  z.object({
-    operation: z.literal(FluoraOperation.SEARCH_FLUORA),
-    name: z.string().optional(),
-  }),
-
-  z.object({
-    operation: z.literal(FluoraOperation.LIST_SERVERS),
-    category: z.string().optional(),
-  }),
-
-  z.object({
-    operation: z.literal(FluoraOperation.GET_SERVER_INFO),
-    serverId: z.string(),
-  }),
-
-  // Monetization Operations
-  z.object({
-    operation: z.literal(FluoraOperation.PRICE_LISTING),
-    serverId: z.string(),
-    mcpServerUrl: z.string(),
-  }),
-
-  z.object({
-    operation: z.literal(FluoraOperation.PAYMENT_METHODS),
-    serverId: z.string(),
-    mcpServerUrl: z.string(),
-  }),
-
-  z.object({
-    operation: z.literal(FluoraOperation.MAKE_PURCHASE),
-    serverId: z.string(),
-    mcpServerUrl: z.string(),
-    itemPrice: z.string().regex(/^\d*\.?\d+$/, 'Invalid price format'),
-    serverWalletAddress: z
-      .string()
-      .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid wallet address'),
-    paymentMethod: z.nativeEnum(PaymentMethods),
-    itemId: z.string().optional(),
-    args: z.record(z.any()).optional(),
-  }),
-
-  // Tool Execution Operations
-  z.object({
-    operation: z.literal(FluoraOperation.CALL_SERVER_TOOL),
-    serverId: z.string(),
-    mcpServerUrl: z.string(),
-    toolName: z.string(),
-    args: z.record(z.any()),
-  }),
-
-  z.object({
-    operation: z.literal(FluoraOperation.LIST_TOOLS),
-    serverId: z.string(),
-    mcpServerUrl: z.string(),
-  }),
-
-  // Management Operations
-  z.object({
-    operation: z.literal(FluoraOperation.GET_PURCHASE_HISTORY),
-    userAddress: z
-      .string()
-      .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid address')
-      .optional(),
-  }),
-
-  z.object({
-    operation: z.literal(FluoraOperation.VALIDATE_PAYMENT),
-    transactionHash: z
-      .string()
-      .regex(/^0x[a-fA-F0-9]{64}$/, 'Invalid transaction hash'),
-    paymentMethod: z.nativeEnum(PaymentMethods),
-  }),
+export const fluoraOperationSchema = z.discriminatedUnion('operation', [
+  SearchServerSchema,
+  ListServersSchema,
+  GetServerInfoSchema,
+  PriceListingSchema,
+  PaymentMethodsSchema,
+  MakePurchaseSchema,
+  CallServerToolSchema,
+  ListToolsSchema,
+  GetPurchaseHistorySchema,
+  ValidatePaymentSchema,
 ]);
 
 /**
@@ -372,7 +371,7 @@ export const executeFailSchema = z.object({
 });
 
 // Type exports
-export type ToolParams = z.infer<typeof toolParamsSchema>;
+export type ToolParams = z.infer<typeof fluoraOperationSchema>;
 export type PrecheckSuccess = z.infer<typeof precheckSuccessSchema>;
 export type PrecheckFail = z.infer<typeof precheckFailSchema>;
 export type ExecuteSuccess = z.infer<typeof executeSuccessSchema>;
