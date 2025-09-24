@@ -38,7 +38,7 @@ describe('FluoraApiService', () => {
 
       // Verify the correct API endpoint was called with parameters
       expect(axios.get).toHaveBeenCalledWith(`${API_BASE_URL}/mcp-agents`, {
-        params: { name: 'test', category: '' },
+        params: { name: 'test' },
       });
 
       expect(result).toEqual(mockServers);
@@ -61,7 +61,7 @@ describe('FluoraApiService', () => {
 
       // Verify the correct API endpoint was called with empty parameters
       expect(axios.get).toHaveBeenCalledWith(`${API_BASE_URL}/mcp-agents`, {
-        params: { name: '', category: '' },
+        params: {},
       });
 
       expect(result).toEqual(mockServers);
@@ -97,7 +97,7 @@ describe('FluoraApiService', () => {
 
       // Verify the correct API endpoint was called with parameters
       expect(axios.get).toHaveBeenCalledWith(`${API_BASE_URL}/mcp-agents`, {
-        params: { name: '', category: 'AI' },
+        params: { category: 'AI' },
       });
 
       expect(result).toEqual(mockServers);
@@ -119,7 +119,7 @@ describe('FluoraApiService', () => {
 
       // Verify the correct API endpoint was called with empty parameters
       expect(axios.get).toHaveBeenCalledWith(`${API_BASE_URL}/mcp-agents`, {
-        params: { name: '', category: '' },
+        params: {},
       });
 
       expect(result).toEqual(mockServers);
@@ -198,11 +198,52 @@ describe('FluoraApiService', () => {
       expect(result).toBe(true);
     });
 
-    it('should return false if server URL check fails', async () => {
-      const serverUrl = 'https://invalid-server.com';
+    it('should handle network timeout', async () => {
+      const serverUrl = 'https://slow-server.com';
 
-      // Mock failed request
-      vi.mocked(axios.get).mockRejectedValueOnce(new Error('Network error'));
+      // Mock axios to throw a timeout error
+      vi.mocked(axios.get).mockRejectedValueOnce(
+        new Error('timeout of 5000ms exceeded')
+      );
+
+      const result = await service.validateServerUrl(serverUrl);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle invalid URL format', async () => {
+      const serverUrl = 'not-a-valid-url';
+
+      // Mock axios to throw an error for invalid URL
+      vi.mocked(axios.get).mockRejectedValueOnce(new Error('Invalid URL'));
+
+      const result = await service.validateServerUrl(serverUrl);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle 404 response', async () => {
+      const serverUrl = 'https://not-found-server.com';
+
+      // Mock axios to throw a 404 error
+      vi.mocked(axios.get).mockRejectedValueOnce({
+        response: { status: 404 },
+        message: 'Not Found',
+      });
+
+      const result = await service.validateServerUrl(serverUrl);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle 500 response', async () => {
+      const serverUrl = 'https://error-server.com';
+
+      // Mock axios to throw a 500 error
+      vi.mocked(axios.get).mockRejectedValueOnce({
+        response: { status: 500 },
+        message: 'Internal Server Error',
+      });
 
       const result = await service.validateServerUrl(serverUrl);
 

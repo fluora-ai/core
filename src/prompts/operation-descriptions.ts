@@ -118,7 +118,7 @@ A failure response will return an error message with details.
   [
     FluoraOperation.PAYMENT_METHODS,
     `
-This tool gets pricing information and payment methods for a monetized MCP server on the Fluora marketplace via the Fluora API.
+This tool gets available payment methods for a monetized MCP server on the Fluora marketplace via the Fluora API.
 
 A successful response will return a JSON like this:
 
@@ -126,22 +126,12 @@ A successful response will return a JSON like this:
   "content": [
     {
       "type": "text",
-      "text": {
-        "items": [
-          {
-            "id": "1",
-            "name": "Convert to PDF",
-            "description": "Convert a website to a PDF",
-            "price": {
-              "amount": 0.1,
-              "paymentMethod": "USDC_BASE_SEPOLIA"
-            },
-            "params": {
-              "websiteUrl": "Example: https://en.wikipedia.org/wiki/PDF"
-            }
-          }
-        ]
-      }
+      "text": [
+        {
+          "walletAddress": "0x1234567890123456789012345678901234567890",
+          "paymentMethod": "USDC_BASE_SEPOLIA"
+        }
+      ]
     }
   ]
 }
@@ -190,5 +180,97 @@ A successful response will return a JSON like this:
 A failure response will return an error message with details.
 `,
   ],
-]);
+  [
+    FluoraOperation.LIST_SERVERS,
+    `
+This tool lists all available monetized MCP servers on the Fluora marketplace via the Fluora API.
 
+A successful response will return a JSON like this:
+[
+  {
+    "id": "c45d3968-0aa1-4d78-a16e-041372110f23",
+    "name": "PDF Shift",
+    "description": "A tool to convert website to PDF file.",
+    "categories": "PDF, SaaS",
+    "verified": false,
+    "website_url": "https://pdfshift.io/",
+    "mcp_server_url": "https://9krswmmx4a.us-west-2.awsapprunner.com",
+    "created_at": "2025-05-16T22:17:44.437+00:00",
+    "updated_at": "2025-05-16T22:17:44.437+00:00"
+  }
+]
+
+A failure response will return an error message with details.
+`,
+  ],
+  [
+    FluoraOperation.GET_SERVER_INFO,
+    `
+This tool gets detailed information about a specific monetized MCP server on the Fluora marketplace via the Fluora API.
+
+A successful response will return a JSON like this:
+{
+  "id": "c45d3968-0aa1-4d78-a16e-041372110f23",
+  "name": "PDF Shift",
+  "description": "A tool to convert website to PDF file.",
+  "categories": "PDF, SaaS",
+  "verified": false,
+  "website_url": "https://pdfshift.io/",
+  "mcp_server_url": "https://9krswmmx4a.us-west-2.awsapprunner.com",
+  "created_at": "2025-05-16T22:17:44.437+00:00",
+  "updated_at": "2025-05-16T22:17:44.437+00:00"
+}
+
+A failure response will return an error message with details.
+`,
+  ],
+  [
+    FluoraOperation.CALL_SERVER_TOOL,
+    `
+This tool calls a specific tool on a monetized MCP server with the provided parameters.
+
+A successful response will return the tool's execution result in JSON format.
+
+A failure response will return an error message with details.
+`,
+  ],
+  [
+    FluoraOperation.GET_PURCHASE_HISTORY,
+    `
+This tool retrieves the purchase history for the current user from the Fluora marketplace.
+
+A successful response will return a JSON like this:
+{
+  "purchases": [
+    {
+      "id": "purchase-123",
+      "serviceId": "service-456",
+      "amount": 0.1,
+      "currency": "USDC",
+      "status": "completed",
+      "createdAt": "2025-01-15T10:30:00Z"
+    }
+  ]
+}
+
+A failure response will return an error message with details.
+`,
+  ],
+  [
+    FluoraOperation.VALIDATE_PAYMENT,
+    `
+This tool validates a payment transaction on the blockchain to ensure it was successful.
+
+A successful response will return a JSON like this:
+{
+  "valid": true,
+  "transactionHash": "0x123...",
+  "amount": 0.1,
+  "currency": "USDC",
+  "status": "confirmed"
+}
+
+A failure response will return an error message with details.
+`,
+  ],
+]);

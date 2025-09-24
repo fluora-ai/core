@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { FluoraMcpClientSSE } from '../../src/services/fluora-mcp-client-sse';
+import { FluoraMcpClientSSE } from '../../src/clients/fluora-mcp-client-sse';
 
 // Mock the MCP SDK modules
 vi.mock('@modelcontextprotocol/sdk/client/index.js', () => ({
@@ -41,8 +41,12 @@ describe('FluoraMcpClientSSE', () => {
       const serverUrl = 'https://test-server.com';
 
       // Mock the dynamic imports
-      const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
-      const { SSEClientTransport } = await import('@modelcontextprotocol/sdk/client/sse.js');
+      const { Client } = await import(
+        '@modelcontextprotocol/sdk/client/index.js'
+      );
+      const { SSEClientTransport } = await import(
+        '@modelcontextprotocol/sdk/client/sse.js'
+      );
 
       vi.mocked(Client).mockReturnValue(mockClient);
 
@@ -52,7 +56,9 @@ describe('FluoraMcpClientSSE', () => {
         { name: 'fluora-client', version: '1.0.0' },
         { capabilities: { prompts: {}, resources: {}, tools: {} } }
       );
-      expect(SSEClientTransport).toHaveBeenCalledWith(new URL(`${serverUrl}/sse`));
+      expect(SSEClientTransport).toHaveBeenCalledWith(
+        new URL(`${serverUrl}/sse`)
+      );
       expect(mockClient.connect).toHaveBeenCalled();
     });
   });
@@ -87,7 +93,9 @@ describe('FluoraMcpClientSSE', () => {
 
     it('should throw error if client is not connected', async () => {
       // Don't set up the client (simulate not connected)
-      await expect(client.callTool('test-tool')).rejects.toThrow('Client not connected');
+      await expect(client.callTool('test-tool')).rejects.toThrow(
+        'Client not connected'
+      );
     });
   });
 
