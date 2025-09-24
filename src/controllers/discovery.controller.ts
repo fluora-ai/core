@@ -1,9 +1,15 @@
-import { FluoraApiService } from '../services/index.js';
+import { FluoraApiService, ServiceRegistryService } from '../services/index.js';
 import {
   DiscoveryRequest,
   DiscoveryResult,
   McpServersFilter,
 } from '../types/index.js';
+import {
+  ServiceRegistry,
+  EnrichedService,
+  McpServer,
+  ServiceStatistics,
+} from '../types/registry.js';
 
 /**
  * DiscoveryController - Handles server discovery and metadata operations
@@ -11,9 +17,11 @@ import {
  */
 export class DiscoveryController {
   private readonly apiService: FluoraApiService;
+  private readonly registryService: ServiceRegistryService;
 
   constructor() {
     this.apiService = new FluoraApiService();
+    this.registryService = new ServiceRegistryService();
   }
 
   /**
@@ -124,5 +132,55 @@ export class DiscoveryController {
    */
   async validateServerUrl(mcpServerUrl: string): Promise<boolean> {
     return this.apiService.validateServerUrl(mcpServerUrl);
+  }
+
+  /**
+   * Explore and enrich services from servers
+   */
+  async handleExploreServices(
+    servers: McpServer[],
+    category?: string,
+    maxServers: number = 20,
+    isUnsafeDirectAccess = false
+  ): Promise<ServiceRegistry> {
+    return this.registryService.exploreAndEnrichServices(
+      servers,
+      category,
+      maxServers,
+      isUnsafeDirectAccess
+    );
+  }
+
+  /**
+   * Find a service by ID across enriched services
+   */
+  findServiceById(
+    services: EnrichedService[],
+    serviceId: string
+  ): EnrichedService | null {
+    return this.registryService.findServiceById(services, serviceId);
+  }
+
+  /**
+   * Validate service execution readiness
+   */
+  validateServiceExecution(service: EnrichedService): void {
+    return this.registryService.validateServiceExecution(service);
+  }
+
+  /**
+   * Group services by category
+   */
+  groupServicesByCategory(
+    services: EnrichedService[]
+  ): Record<string, EnrichedService[]> {
+    return this.registryService.groupServicesByCategory(services);
+  }
+
+  /**
+   * Get service statistics
+   */
+  getServiceStatistics(registry: ServiceRegistry): ServiceStatistics {
+    return this.registryService.getServiceStatistics(registry);
   }
 }

@@ -262,6 +262,30 @@ export class ServiceRegistryService {
     }
   }
 
+  async validateServiceAvailability(
+    serviceId: string,
+    mcpServerUrl: string
+  ): Promise<void> {
+    const client = await this.gateway.getConnection(mcpServerUrl);
+    try {
+      const pricingData = await this.getPricingData(client);
+      const serviceExists = pricingData.items.find(
+        item => item.id === serviceId
+      );
+      if (!serviceExists) {
+        throw new Error(
+          `Service ${serviceId} is no longer available on the server`
+        );
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to verify service availability: ${error as string}`
+      );
+    } finally {
+      await client.disconnect();
+    }
+  }
+
   groupServicesByCategory(
     services: EnrichedService[]
   ): Record<string, EnrichedService[]> {
@@ -351,6 +375,22 @@ export class ServiceRegistryService {
   }
   getExecutionReadyServices(services: EnrichedService[]): EnrichedService[] {
     return services.filter(service => service.executionReady);
+  }
+
+  getExecutionCostEstimate(
+    service: EnrichedService
+  ): {
+    amount: number;
+    currency: string;
+    paymentMethod: string;
+    walletAddress: string;
+  } {
+    return {
+      amount: service.price.amount,
+      currency: service.price.currency || 'USDC',
+      paymentMethod: service.price.paymentMethod,
+      walletAddress: service.paymentInfo.walletAddress,
+    };
   }
 
   getServiceStatistics(registry: ServiceRegistry): ServiceStatistics {

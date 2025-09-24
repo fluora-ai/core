@@ -92,3 +92,34 @@ export interface ServiceStatistics {
   serversWithErrors: number;
   averageServicesPerServer: number;
 }
+
+export interface ServiceExecutionRequest {
+  serviceId: string;
+  serverUrl: string;
+  serverId: string;
+  params: Record<string, unknown>;
+  pkpPrivateKey?: string;
+}
+
+export interface ServiceExecutionResult {
+  success: boolean;
+  result?: unknown;
+  transactionCost?: string;
+  error?: string;
+  executionTime?: number;
+}
+
+export interface ServiceExecutionRequest {
+  serviceId: string;
+  serverUrl: string;
+  serverId: string;
+  params: Record<string, unknown>;
+}
+
+export interface ServiceExecutionResult {
+  success: boolean;
+  result?: unknown;
+  transactionCost?: string;
+  error?: string;
+  executionTime?: number;
+}
