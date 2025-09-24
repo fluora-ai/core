@@ -63,7 +63,10 @@ export async function createSignedTransaction(
     );
 
     // Create a wallet client for the specified chain
-    const privateKey = (_pkpPrivateKey as Hex) || `0x${_pkpPrivateKey}`;
+    const isHex = _pkpPrivateKey?.startsWith('0x');
+    const privateKey: Hex = isHex
+      ? (_pkpPrivateKey as Hex)
+      : `0x${_pkpPrivateKey}`;
     const account = privateKeyToAccount(privateKey);
     const walletClient = createWalletClient({
       transport: http(),
@@ -71,19 +74,24 @@ export async function createSignedTransaction(
       account,
     }).extend(publicActions);
 
-    // Create payment requirements
-    const paymentRequirements = createx402PaymentRequirements(
-      amount,
-      paymentMethod,
-      _recipientAddress
-    );
+    const isFree = amount === 0;
 
-    // Create payment header
-    const paymentHeader = exact.evm.createPaymentHeader(
-      walletClient,
-      1,
-      paymentRequirements
-    );
+    let paymentHeader = 'No payment required';
+
+    if (!isFree) {
+      // Create payment requirements
+      const paymentRequirements = createx402PaymentRequirements(
+        amount,
+        paymentMethod,
+        _recipientAddress
+      );
+      // Create payment header
+      paymentHeader = await exact.evm.createPaymentHeader(
+        walletClient,
+        1,
+        paymentRequirements
+      );
+    }
 
     return paymentHeader;
   } catch (error) {
