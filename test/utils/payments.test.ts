@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { PaymentMethods } from '../../src/schemas';
+import { PaymentMethods } from '../../src/types/operations';
 import { base, baseSepolia } from 'viem/chains';
 
 // Move mock creation to top-level - no hoisting issues

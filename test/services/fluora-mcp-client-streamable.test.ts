@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { FluoraMcpClientStreamable } from '../../src/services/fluora-mcp-client-streamable';
+import { FluoraMcpClientStreamable } from '../../src/clients/fluora-mcp-client-streamable';
 
 // Mock the MCP SDK modules
 vi.mock('@modelcontextprotocol/sdk/client/index.js', () => ({
@@ -41,8 +41,12 @@ describe('FluoraMcpClientStreamable', () => {
       const serverUrl = 'https://test-server.com';
 
       // Mock the dynamic imports
-      const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
-      const { StreamableHTTPClientTransport } = await import('@modelcontextprotocol/sdk/client/streamableHttp.js');
+      const { Client } = await import(
+        '@modelcontextprotocol/sdk/client/index.js'
+      );
+      const { StreamableHTTPClientTransport } = await import(
+        '@modelcontextprotocol/sdk/client/streamableHttp.js'
+      );
 
       vi.mocked(Client).mockReturnValue(mockClient);
 
@@ -52,7 +56,9 @@ describe('FluoraMcpClientStreamable', () => {
         { name: 'fluora-streamable-client', version: '1.0.0' },
         { capabilities: { prompts: {}, resources: {}, tools: {} } }
       );
-      expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(new URL(`${serverUrl}/mcp`));
+      expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
+        new URL(`${serverUrl}/mcp`)
+      );
       expect(mockClient.connect).toHaveBeenCalled();
     });
 
@@ -60,8 +66,12 @@ describe('FluoraMcpClientStreamable', () => {
       const serverUrl = 'https://unreachable-server.com';
 
       // Mock the dynamic imports
-      const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
-      const { StreamableHTTPClientTransport } = await import('@modelcontextprotocol/sdk/client/streamableHttp.js');
+      const { Client } = await import(
+        '@modelcontextprotocol/sdk/client/index.js'
+      );
+      const { StreamableHTTPClientTransport } = await import(
+        '@modelcontextprotocol/sdk/client/streamableHttp.js'
+      );
 
       vi.mocked(Client).mockReturnValue(mockClient);
       mockClient.connect.mockRejectedValue(new Error('fetch failed'));
@@ -100,7 +110,9 @@ describe('FluoraMcpClientStreamable', () => {
 
     it('should throw error if server URL is not set', async () => {
       // Don't set up the client (simulate not connected)
-      await expect(client.callTool('test-tool')).rejects.toThrow('Client not connected');
+      await expect(client.callTool('test-tool')).rejects.toThrow(
+        'Client not connected'
+      );
     });
 
     it('should handle API errors', async () => {

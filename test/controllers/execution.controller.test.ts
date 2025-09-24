@@ -5,7 +5,7 @@ import {
 } from '../../src/controllers/execution.controller';
 import { McpGatewayService } from '../../src/services/mcp-gateway.service';
 import { BlockchainPaymentService } from '../../src/services/blockchain-payment.service';
-import { FluoraOperation, PaymentMethods } from '../../src/schemas';
+import { FluoraOperation, PaymentMethods } from '../../src/types/operations';
 
 // Mock dependencies
 vi.mock('../../src/services/mcp-gateway.service');
@@ -406,6 +406,200 @@ describe('ExecutionController', () => {
       );
       expect(result).toBe(false);
       expect(console.warn).toHaveBeenCalled();
+    });
+  });
+
+  describe('handleServiceExecution', () => {
+    it('should delegate to service execution service', async () => {
+      const mockRequest = {
+        serviceId: 'service1',
+        serverUrl: 'https://test-server.com',
+        serverId: 'server1',
+        params: { input: 'test' },
+        pkpPrivateKey: '0xprivatekey',
+      };
+
+      const mockService = {
+        id: 'service1',
+        name: 'Test Service',
+        description: 'Test',
+        price: { amount: 10, paymentMethod: 'USDC_BASE_MAINNET' },
+        params: {},
+        serverInfo: {
+          mcpServerUrl: 'https://test.com',
+          serverId: 'server1',
+          serverName: 'Test Server',
+          verified: true,
+          categories: 'Test',
+        },
+        paymentInfo: {
+          walletAddress: '0x123',
+          paymentMethod: 'USDC_BASE_MAINNET',
+        },
+        executionReady: true,
+        category: 'Test',
+      };
+
+      const mockResult = {
+        success: true,
+        result: { data: 'test' },
+        transactionCost: '10 USDC',
+        executionTime: 100,
+      };
+
+      // Mock the service execution service
+      const mockServiceExecutionService = {
+        executeService: vi.fn().mockResolvedValue(mockResult),
+      };
+      (controller as any).serviceExecutionService = mockServiceExecutionService;
+
+      const result = await controller.handleServiceExecution(
+        mockRequest,
+        mockService
+      );
+
+      expect(mockServiceExecutionService.executeService).toHaveBeenCalledWith(
+        mockRequest,
+        mockService
+      );
+      expect(result).toBe(mockResult);
+    });
+  });
+
+  describe('getExecutionCostEstimate', () => {
+    it('should return cost estimate with currency', () => {
+      const mockService = {
+        id: 'service1',
+        name: 'Test Service',
+        description: 'Test',
+        price: {
+          amount: 10,
+          currency: 'USDC',
+          paymentMethod: 'USDC_BASE_MAINNET',
+        },
+        params: {},
+        serverInfo: {
+          mcpServerUrl: 'https://test.com',
+          serverId: 'server1',
+          serverName: 'Test Server',
+          verified: true,
+          categories: 'Test',
+        },
+        paymentInfo: {
+          walletAddress: '0x123',
+          paymentMethod: 'USDC_BASE_MAINNET',
+        },
+        executionReady: true,
+        category: 'Test',
+      };
+
+      const result = controller.getExecutionCostEstimate(mockService);
+
+      expect(result).toEqual({
+        amount: 10,
+        currency: 'USDC',
+        paymentMethod: 'USDC_BASE_MAINNET',
+        walletAddress: '0x123',
+      });
+    });
+
+    it('should return cost estimate with default currency', () => {
+      const mockService = {
+        id: 'service1',
+        name: 'Test Service',
+        description: 'Test',
+        price: {
+          amount: 10,
+          currency: undefined,
+          paymentMethod: 'USDC_BASE_MAINNET',
+        },
+        params: {},
+        serverInfo: {
+          mcpServerUrl: 'https://test.com',
+          serverId: 'server1',
+          serverName: 'Test Server',
+          verified: true,
+          categories: 'Test',
+        },
+        paymentInfo: {
+          walletAddress: '0x123',
+          paymentMethod: 'USDC_BASE_MAINNET',
+        },
+        executionReady: true,
+        category: 'Test',
+      };
+
+      const result = controller.getExecutionCostEstimate(mockService);
+
+      expect(result).toEqual({
+        amount: 10,
+        currency: 'USDC',
+        paymentMethod: 'USDC_BASE_MAINNET',
+        walletAddress: '0x123',
+      });
+    });
+  });
+
+  describe('validateServiceExecution', () => {
+    it('should delegate to service registry service', () => {
+      const mockService = {
+        id: 'service1',
+        name: 'Test Service',
+        description: 'Test',
+        price: { amount: 10, paymentMethod: 'USDC_BASE_MAINNET' },
+        params: {},
+        serverInfo: {
+          mcpServerUrl: 'https://test.com',
+          serverId: 'server1',
+          serverName: 'Test Server',
+          verified: true,
+          categories: 'Test',
+        },
+        paymentInfo: {
+          walletAddress: '0x123',
+          paymentMethod: 'USDC_BASE_MAINNET',
+        },
+        executionReady: true,
+        category: 'Test',
+      };
+
+      // Mock the service registry service
+      const mockServiceRegistryService = {
+        validateServiceExecution: vi.fn(),
+      };
+      (controller as any).serviceRegistryService = mockServiceRegistryService;
+
+      controller.validateServiceExecution(mockService);
+
+      expect(
+        mockServiceRegistryService.validateServiceExecution
+      ).toHaveBeenCalledWith(mockService);
+    });
+  });
+
+  describe('validateServiceParams', () => {
+    it('should delegate to service registry service', () => {
+      const mockService = {
+        id: 'service1',
+        name: 'Test Service',
+        description: 'Test',
+        price: { amount: 10, paymentMethod: 'USDC_BASE_MAINNET' },
+        params: { input: 'string' },
+      };
+
+      const mockParams = { input: 'test data' };
+
+      // Mock the service registry service
+      const mockServiceRegistryService = {
+        validateServiceParams: vi.fn(),
+      };
+      (controller as any).serviceRegistryService = mockServiceRegistryService;
+
+      controller.validateServiceParams(mockService, mockParams);
+
+      expect(
+        mockServiceRegistryService.validateServiceParams
+      ).toHaveBeenCalledWith(mockService, mockParams);
     });
   });
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { BlockchainPaymentService } from '../../src/services/blockchain-payment.service';
-import { PaymentMethods } from '../../src/schemas';
+import { PaymentMethods } from '../../src/types/operations';
 import * as PaymentUtils from '../../src/utils/payments';
 
 // Mock viem and x402 modules

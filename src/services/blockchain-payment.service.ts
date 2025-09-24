@@ -1,4 +1,4 @@
-import { PaymentMethods } from '../schemas.js';
+import { PaymentMethods } from '../types/operations.js';
 
 import {
   getCurrencyFromPaymentMethod,

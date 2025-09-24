@@ -1,8 +1,16 @@
-import { FluoraOperation, PaymentMethods } from '../schemas.js';
+import { FluoraOperation, PaymentMethods } from '../types/operations.js';
 import {
   McpGatewayService,
   BlockchainPaymentService,
+  ServiceRegistryService,
+  ServiceExecutionService,
 } from '../services/index.js';
+import {
+  ServiceExecutionRequest,
+  ServiceExecutionResult,
+  EnrichedService,
+  RawServiceItem,
+} from '../types/registry.js';
 
 export interface ExecutionRequest {
   operation: FluoraOperation;
@@ -32,10 +40,14 @@ export interface ExecutionResult {
 export class ExecutionController {
   private readonly mcpGateway: McpGatewayService;
   private readonly paymentService: BlockchainPaymentService;
+  private readonly serviceRegistryService: ServiceRegistryService;
+  private readonly serviceExecutionService: ServiceExecutionService;
 
   constructor() {
     this.mcpGateway = new McpGatewayService();
     this.paymentService = new BlockchainPaymentService();
+    this.serviceRegistryService = new ServiceRegistryService();
+    this.serviceExecutionService = new ServiceExecutionService();
   }
 
   /**
@@ -226,6 +238,52 @@ export class ExecutionController {
         error: `Failed to list server tools: ${(error as Error).message}`,
       };
     }
+  }
+
+  /**
+   * Execute a service using the ServiceExecutionService
+   */
+  async handleServiceExecution(
+    request: ServiceExecutionRequest,
+    service: EnrichedService
+  ): Promise<ServiceExecutionResult> {
+    return await this.serviceExecutionService.executeService(request, service);
+  }
+
+  /**
+   * Get execution cost estimate for a service
+   */
+  getExecutionCostEstimate(
+    service: EnrichedService
+  ): {
+    amount: number;
+    currency: string;
+    paymentMethod: string;
+    walletAddress: string;
+  } {
+    return {
+      amount: service.price.amount,
+      currency: service.price.currency || 'USDC',
+      paymentMethod: service.price.paymentMethod,
+      walletAddress: service.paymentInfo.walletAddress,
+    };
+  }
+
+  /**
+   * Validate service execution readiness
+   */
+  validateServiceExecution(service: EnrichedService): void {
+    return this.serviceRegistryService.validateServiceExecution(service);
+  }
+
+  /**
+   * Validate service parameters
+   */
+  validateServiceParams(
+    service: RawServiceItem,
+    params: Record<string, unknown>
+  ): void {
+    return this.serviceRegistryService.validateServiceParams(service, params);
   }
 
   /**

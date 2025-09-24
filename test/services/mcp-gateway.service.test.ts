@@ -3,12 +3,12 @@ import {
   McpGatewayService,
   FluoraMcpClient,
 } from '../../src/services/mcp-gateway.service';
-import { FluoraMcpClientSSE } from '../../src/services/fluora-mcp-client-sse';
-import { FluoraMcpClientStreamable } from '../../src/services/fluora-mcp-client-streamable';
+import { FluoraMcpClientSSE } from '../../src/clients/fluora-mcp-client-sse';
+import { FluoraMcpClientStreamable } from '../../src/clients/fluora-mcp-client-streamable';
 
 // Mock the client implementations
-vi.mock('../../src/services/fluora-mcp-client-sse');
-vi.mock('../../src/services/fluora-mcp-client-streamable');
+vi.mock('../../src/clients/fluora-mcp-client-sse');
+vi.mock('../../src/clients/fluora-mcp-client-streamable');
 
 describe('McpGatewayService', () => {
   let service: McpGatewayService;
