@@ -1,4 +1,4 @@
-import { FluoraMcpClient } from './mcp-gateway.service.js';
+import { FluoraMcpClient } from './fluora.mcp-client.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
