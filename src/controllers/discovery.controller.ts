@@ -1,21 +1,9 @@
+import { FluoraApiService } from '../services/index.js';
 import {
-  FluoraApiService,
-  McpServer,
+  DiscoveryRequest,
+  DiscoveryResult,
   McpServersFilter,
-} from '../services/index.js';
-
-export interface DiscoveryRequest {
-  name?: string;
-  category?: string;
-  serverId?: string;
-}
-
-export interface DiscoveryResult {
-  success: boolean;
-  data?: McpServer[] | McpServer;
-  error?: string;
-  count?: number;
-}
+} from '../types/index.js';
 
 /**
  * DiscoveryController - Handles server discovery and metadata operations

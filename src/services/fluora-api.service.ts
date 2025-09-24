@@ -1,20 +1,5 @@
 import axios from 'axios';
-
-export interface McpServer {
-  id: string;
-  name: string;
-  description: string;
-  website: string;
-  verified: boolean;
-  walletAddress: string;
-  mcpServerUrl: string;
-  category?: string;
-}
-
-export interface McpServersFilter {
-  name?: string;
-  category?: string;
-}
+import { McpServer, McpServersFilter } from '../types/mcp.js';
 
 /**
  * Service for interacting with the Fluora API backend
