@@ -3,8 +3,8 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 
 export class FluoraMcpClientSSE implements FluoraMcpClient {
-  private client: unknown;
-  private transport: unknown;
+  private client: Client | null;
+  private transport: SSEClientTransport | null;
 
   constructor() {
     this.client = null;
@@ -28,14 +28,12 @@ export class FluoraMcpClientSSE implements FluoraMcpClient {
     );
 
     this.transport = new SSEClientTransport(new URL(mcpServerUrl + '/sse'));
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-    await (this.client as any).connect(this.transport);
+    await this.client.connect(this.transport);
   }
 
   async disconnect(): Promise<void> {
     if (this.client) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-      await (this.client as any).close();
+      await this.client.close();
     }
   }
 
@@ -47,8 +45,7 @@ export class FluoraMcpClientSSE implements FluoraMcpClient {
       throw new Error('Client not connected');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-    const result = await (this.client as any).callTool({
+    const result = await this.client.callTool({
       name: toolName,
       arguments: toolParams,
     });
@@ -60,8 +57,7 @@ export class FluoraMcpClientSSE implements FluoraMcpClient {
       throw new Error('Client not connected');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-    const result = await (this.client as any).listTools();
+    const result = await this.client.listTools();
     return result as unknown;
   }
 }
