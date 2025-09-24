@@ -1,4 +1,4 @@
-import { FluoraOperation, PaymentMethods } from '../schemas.js';
+import { FluoraOperation, PaymentMethods } from '../types/operations.js';
 import {
   McpGatewayService,
   BlockchainPaymentService,

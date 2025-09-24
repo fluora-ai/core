@@ -1,4 +1,4 @@
-import { PaymentMethods } from '../schemas.js';
+import { PaymentMethods } from '../types/operations.js';
 import { base, baseSepolia, Chain } from 'viem/chains';
 import { exact } from 'x402/schemes';
 import {
