@@ -15,7 +15,7 @@ export interface McpServer {
   website?: string;
   verified: boolean;
   walletAddress?: string;
-  mcpServerUrl: string;
+  mcp_server_url: string;
   categories?: string;
 }
 

@@ -122,14 +122,14 @@ export class ServiceRegistryService {
   private async exploreServerServices(
     server: McpServer
   ): Promise<EnrichedService[]> {
-    const client = await this.gateway.getConnection(server.mcpServerUrl);
+    const client = await this.gateway.getConnection(server.mcp_server_url);
 
     try {
       const pricingData = await this.getPricingData(client);
       const paymentMethods = await this.getPaymentMethods(client);
 
       const serverInfo: ServerInfo = {
-        mcpServerUrl: server.mcpServerUrl,
+        mcpServerUrl: server.mcp_server_url,
         serverId: server.id,
         serverName: server.name,
         verified: server.verified || false,
