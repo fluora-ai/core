@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { McpServer, McpServersFilter } from '../types/mcp.js';
+import { McpServer, McpServersFilter } from '../types/index.js';
 
 /**
  * Service for interacting with the Fluora API backend
@@ -18,10 +18,7 @@ export class FluoraApiService {
   async searchServers(filter: McpServersFilter): Promise<McpServer[]> {
     try {
       const response = await axios.get(`${this.apiUrl}/mcp-agents`, {
-        params: {
-          name: filter.name ?? '',
-          category: filter.category ?? '',
-        },
+        params: filter,
       });
       return response.data as McpServer[];
     } catch (error) {

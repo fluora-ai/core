@@ -1,4 +1,4 @@
-import { McpServer } from './mcp.js';
+import { McpServer } from './registry.js';
 
 export interface DiscoveryRequest {
   name?: string;
